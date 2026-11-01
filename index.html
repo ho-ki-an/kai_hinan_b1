@@ -160,6 +160,53 @@ tr.noEvacRow>td{background:#fbf1e3}
 #pane-walk td .hk-del:hover{color:var(--hk-max)}
 #pane-walk .hk-note{font-size:12px;color:var(--sub);margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}
 #pane-walk .hk-badge{display:inline-block;font-size:11px;padding:1px 8px;border-radius:10px;background:#e9eef3;color:var(--hk-exit);font-family:var(--hk-mono)}
+/* ---------- ⑧ 入力チェック ---------- */
+#pane-check .chkChips{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+#pane-check .chip{display:inline-block;padding:1px 9px;border-radius:10px;font-size:12px;font-weight:700;white-space:nowrap}
+#pane-check .chip.err{background:#fbe3e0;color:var(--ng)}
+#pane-check .chip.warn{background:#fbefd9;color:var(--warn)}
+#pane-check .chip.info{background:#eceff3;color:var(--sub)}
+#pane-check .chkWarnTbl tr.lv-err td{background:#fdf3f2}
+#pane-check .chkWarnTbl tr.lv-warn td{background:#fffaf0}
+#pane-check .chkGraphBox{overflow:auto;border:1px solid var(--line);border-radius:6px;background:#fcfcfb;padding:6px}
+#pane-check .chkGraphBox svg{display:block}
+#pane-check .chkNode.click{cursor:pointer}
+#pane-check .chkNode.click:hover rect{filter:brightness(.96)}
+#pane-check .chkEdgeLbl{cursor:default}
+#pane-check .chkLegend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--sub);margin:8px 0 6px;align-items:center}
+#pane-check .chkLegend span{display:inline-flex;align-items:center;gap:5px}
+#pane-check .sw{display:inline-block;width:14px;height:10px;border-radius:2px}
+#pane-check .sw.s1,#pane-check .chkSeg.s1{background:#2a78d6}
+#pane-check .sw.s2,#pane-check .chkSeg.s2{background:#eb6834}
+#pane-check .sw.s3,#pane-check .chkSeg.s3{background:#1baf7a}
+#pane-check .sw.mk{width:3px;height:14px;background:var(--ink)}
+#pane-check .chkBarRow{display:grid;grid-template-columns:170px 1fr 190px;gap:10px;align-items:center;padding:6px 4px;border-bottom:1px dashed var(--line);cursor:pointer}
+#pane-check .chkBarRow:hover{background:#f6f9fc}
+#pane-check .chkBarRow .nm{font-weight:700;font-size:12.5px;line-height:1.3}
+#pane-check .chkBarRow .val{font-size:12.5px;text-align:right;line-height:1.3}
+#pane-check .track{position:relative;height:30px;background:#f1f4f7;border-radius:4px}
+#pane-check .segs{position:absolute;left:0;top:7px;height:16px;right:0;display:flex}
+#pane-check .chkSeg{height:16px;border-right:2px solid #f1f4f7;box-sizing:border-box;min-width:0}
+#pane-check .chkSeg:first-child{border-radius:4px 0 0 4px}
+#pane-check .tsMark{position:absolute;top:0;bottom:0;width:0;border-left:2px solid var(--ink)}
+#pane-check .tsMark span{position:absolute;top:-1px;left:4px;font-size:10.5px;white-space:nowrap;background:rgba(255,255,255,.85);padding:0 3px;border-radius:3px;color:var(--ink)}
+#pane-check .tsMark.over{border-left-style:dashed}
+#pane-check .tsMark.over span{left:auto;right:4px}
+#pane-check .chkMatrixBox{overflow:auto}
+#pane-check .chkMatrix td.num{text-align:right;white-space:nowrap}
+#pane-check .chkMatrix td.clk{cursor:pointer}
+#pane-check .chkMatrix td.clk:hover{outline:2px solid var(--acc);outline-offset:-2px}
+#pane-check .chkMatrix th.calcCol{background:#e4e8ec;color:var(--sub)}
+#pane-check .chkMatrix td.f-err{background:#fbe3e0 !important;color:var(--ng);font-weight:700}
+#pane-check .chkMatrix td.f-warn{background:#fbefd9 !important;color:var(--warn);font-weight:700}
+#pane-check .chkMatrix td.f-info{box-shadow:inset 0 -2px 0 #9aa5b1}
+#pane-check .chkMatrix .pre{font-size:10px;color:var(--sub);font-weight:400}
+#pane-check .chkMatrix tr.sumRow td{background:#eef3f7;font-weight:700}
+#pane-check .chkMatrix td.nmc{white-space:nowrap}
+@keyframes chkFlash{0%{box-shadow:0 0 0 3px #e0a400;background:#fff6d6}100%{box-shadow:0 0 0 3px transparent}}
+.chkFlash{animation:chkFlash 2s ease-out}
+@media (prefers-reduced-motion: reduce){.chkFlash{animation:none;outline:3px solid #e0a400}}
+@media (max-width:700px){#pane-check .chkBarRow{grid-template-columns:1fr;gap:4px}#pane-check .chkBarRow .val{text-align:left}}
 </style>
 </head>
 <body>
@@ -375,6 +422,7 @@ tr.noEvacRow>td{background:#fbf1e3}
  <button data-tab="report" onclick="showTab('report')">⑤ 計算書</button>
  <button data-tab="prorate" onclick="showTab('prorate')">⑥ 按分計算</button>
  <button data-tab="walk" onclick="showTab('walk')">⑦ 歩行距離</button>
+ <button data-tab="check" onclick="showTab('check')">⑧ 入力チェック</button>
 </nav>
 <div id="inputArea">
 <div id="pane-base">
@@ -503,6 +551,17 @@ tr.noEvacRow>td{background:#fbf1e3}
  </div>
 </div>
 </div><!-- pane-walk -->
+<div id="pane-check" style="display:none">
+<div class="card">
+ <h2>8. 入力チェック(図とグラフで入力ミスを探す)</h2>
+ <div class="small-note" style="margin-bottom:8px">このタブを開いた時点の入力値で自動的に計算し、①ルールによる要確認リスト ②室・建具のつながり図 ③時間の内訳グラフ ④入力値一覧 を表示します。「計算実行」は不要です。表示のみで、判定結果・計算書には影響しません(求積図の階床面積だけはJSONに保存されます)。各項目をクリックすると該当する入力欄へ移動します。</div>
+ <div id="chkHead"></div>
+</div>
+<div class="card"><h2>8-1. 要確認リスト</h2><div id="chkWarn"></div></div>
+<div class="card"><h2>8-2. 室・建具のつながり図(避難先を右端に配置)</h2><div id="chkGraph"></div></div>
+<div class="card"><h2>8-3. 時間の内訳と煙降下時間</h2><div id="chkTime"></div></div>
+<div class="card"><h2>8-4. 入力値一覧(列内バーで桁違いを発見)</h2><div id="chkMatrix"></div></div>
+</div><!-- pane-check -->
 </div><!-- inputArea -->
 
 <div class="card no-print" id="resultsArea" style="display:none">
@@ -1128,9 +1187,10 @@ function dropDoor(ev,i){
  DRAG_D=null;renderDoors();if(moved)renderRooms();
 }
 /* ---------- タブ ---------- */
-const PANES={base:"pane-base",doors:"pane-doors",rooms:"pane-rooms",results:"resultsArea",report:"report",prorate:"pane-prorate",walk:"pane-walk"};
+const PANES={base:"pane-base",doors:"pane-doors",rooms:"pane-rooms",results:"resultsArea",report:"report",prorate:"pane-prorate",walk:"pane-walk",check:"pane-check"};
 function showTab(name){
  if(name==="prorate")renderProrate();
+ if(name==="check"){ try{ renderCheck(); }catch(e){ const el=document.getElementById("chkWarn"); if(el) el.innerHTML='<div class="warn">入力チェックの表示中にエラー: '+esc(e.message)+'</div>'; } }
  for(const [k,id] of Object.entries(PANES)){
   const el=document.getElementById(id); if(el) el.style.display=(k===name)?"":"none";
  }
@@ -1667,6 +1727,462 @@ function loadSample(){
      (告示510号第一号の当該居室等。既存室の参照/個別入力の併用。個別入力分は階の合計にも加算)
    ・計算書に「2. 出口・開口部一覧」を追加し、以降の章番号を繰下げ(3.居室避難/4.階避難/5.総合判定) */
 renderAll();showTab("base");
+/* =========================================================
+   ⑧ 入力チェック(v1.7) — 入力値を図・グラフ・警告一覧で可視化し、入力ミスの発見を補助する。
+   計算エンジン(ENGINE_START〜END)は変更せず、表示時点の入力値で同じエンジンを呼んで描画する。
+   計算書・判定結果には一切影響しない(M.chkFloorAreaのみJSONに保存される)。
+   ========================================================= */
+const CHK_LV={err:3,warn:2,info:1};
+const CHK_LVLABEL={err:"エラー",warn:"要確認",info:"参考"};
+const CHK_SPEEDS=[27,30,35,36,47,60,78]; // 告示510号の歩行速度(m/分)
+let CHK_LAST=null;
+function chkNum(v){ return (v===""||v==null||isNaN(parseFloat(v)))?null:parseFloat(v); }
+function chkShort(s,n){ s=String(s??""); return s.length>n? s.slice(0,n-1)+"…" : s; }
+function chkDoorShort(d){ const nm=String(d?.name||"?"); const sp=nm.search(/[\s　]/); return sp>0? nm.slice(0,sp) : chkShort(nm,6); }
+/* ---------- 1. ルールチェック ---------- */
+function chkCollect(model,calc){
+ const list=[]; const roomLv={}; const doorLv={}; const stairLv={}; const cell={};
+ const put=(lv,where,msg,field)=>{
+  list.push({lv,where,msg,field});
+  const bump=(obj,k)=>{ if(!obj[k]||CHK_LV[lv]>CHK_LV[obj[k]]) obj[k]=lv; };
+  if(where.type==="room"){ bump(roomLv,where.i); if(field){ cell[where.i]=cell[where.i]||{}; const c=cell[where.i][field]; if(!c||CHK_LV[lv]>CHK_LV[c.lv]) cell[where.i][field]={lv,msg}; else c.msg+=" / "+msg; } }
+  if(where.type==="door") bump(doorLv,where.i);
+  if(where.type==="stair") bump(stairLv,where.i);
+ };
+ const rooms=model.rooms, doors=M.doors||[], stairs=model.stairs||[];
+ const R=i=>({type:"room",i}), D=i=>({type:"door",i}), S=i=>({type:"stair",i}), B={type:"base"};
+ /* --- 階全体 --- */
+ if(!rooms.length) put("err",B,"室が1つも入力されていません");
+ const anyGround=rooms.some(r=>(r.exits||[]).some(e=>e.to.type==="ground"));
+ if(!model.isEscape && !stairs.length) put("err",B,"避難階以外なのに直通階段が登録されていません(①タブ)");
+ if(!model.isEscape && anyGround) put("warn",B,"避難階以外の設定ですが、出口の接続先に「地上」があります(①の「避難階か」を確認)");
+ if(model.isEscape && !anyGround) put("warn",B,"避難階の設定ですが、接続先が「地上」の出口が1つもありません");
+ const fa=chkNum(M.chkFloorArea);
+ const sumA=calc.floor?calc.floor.sumAall:rooms.reduce((s,r)=>s+(+r.area||0),0);
+ if(fa!=null && fa>0){
+  const d=(sumA-fa)/fa;
+  if(Math.abs(d)>0.01) put("warn",B,`室面積の合計 ${fmt(sumA)}m² が求積図の階床面積 ${fmt(fa)}m² と ${(d*100).toFixed(1)}% 違います(室の入力漏れ・二重入力・桁違いを確認)`);
+ }
+ /* 名称の重複 */
+ const dupe=(arr,label,mk)=>{ const seen={}; arr.forEach((x,i)=>{ const k=String(x.name||"").trim(); if(!k)return; if(seen[k]!=null) put("warn",mk(i),`${label}名「${k}」が重複しています(つながり図・計算書で区別できません)`); else seen[k]=i; }); };
+ dupe(rooms,"室",R); dupe(doors,"建具",D);
+ /* --- 直通階段 --- */
+ stairs.forEach((s,i)=>{
+  const used=rooms.some(r=>(r.exits||[]).some(e=>e.to.type==="stair"&&e.to.ref===s.id));
+  if(!used) put("warn",S(i),`直通階段「${s.name}」に接続する出口がありません`);
+  if(!(+s.ast>0)) put("warn",S(i),`「${s.name}」の階段室床面積ΣAstが0/未入力です(Neffが小さくなります)`);
+  if(!(+s.width>0)) put("warn",S(i),`「${s.name}」の階段幅が未入力です`);
+  if(+s.width>0 && +s.width<0.6) put("warn",S(i),`「${s.name}」の階段幅 ${s.width}m が0.6m未満です(単位を確認)`);
+ });
+ /* --- 建具 --- */
+ doors.forEach((d,i)=>{
+  const users=rooms.filter(r=>(r.exits||[]).some(e=>e.doorType===d.id));
+  if(!users.length) put("info",D(i),`建具「${d.name}」はどの室の出口にも使われていません`);
+  const w=chkNum(d.width), raw=chkNum(d.rawW), top=chkNum(d.topH), bot=chkNum(d.botH)||0;
+  if(w==null||w<=0) put("err",D(i),`建具「${d.name}」の有効幅Bが未入力です`);
+  else{
+   if(w<0.6) put("warn",D(i),`建具「${d.name}」の有効幅 ${w}m は60cm未満 → 出口として算入されません(Neff=0)`);
+   if(w>6) put("warn",D(i),`建具「${d.name}」の有効幅 ${w}m が大きすぎます(mm入力・桁違いを確認)`);
+   if(raw!=null && raw<w) put("err",D(i),`建具「${d.name}」の開口見付幅 ${raw}m が有効幅 ${w}m より小さくなっています`);
+  }
+  if(top==null||top<=0) put("err",D(i),`建具「${d.name}」の上端高さが未入力です`);
+  else{
+   if(top<=bot) put("err",D(i),`建具「${d.name}」の上端 ${top}m が下端 ${bot}m 以下です`);
+   if(top>6) put("warn",D(i),`建具「${d.name}」の上端高さ ${top}m が大きすぎます(桁違いを確認)`);
+   if(bot===0 && top<1.8 && !d.noEvac) put("warn",D(i),`建具「${d.name}」は上端 ${top}m の出入口です(1.8m未満。窓なら下端高さを入力)`);
+   users.forEach(r=>{ const H=+r.Htop||+r.Hroom; if(H>0 && top>H+0.005) put("warn",D(i),`建具「${d.name}」の上端 ${top}m が「${r.name}」の天井高 ${H}m を超えています`); });
+  }
+ });
+ /* --- 室 --- */
+ const reach=rooms.map(r=>canEgressAvoidingSet(model,r.id,{}));
+ rooms.forEach((r,i)=>{
+  const nm=`「${r.name||"(無名)"}」`;
+  const u=USES[r.useKey]||{};
+  const A=chkNum(r.area), H=chkNum(r.Hroom), p=chkNum(r.p), ql=chkNum(r.ql), v=chkNum(r.walkV);
+  const lR=chkNum(r.lRoomExit), lS=chkNum(r.lStair), lAlt=chkNum(r.lStairAlt), Hlow=chkNum(r.Hlow), Htop=chkNum(r.Htop);
+  // 面積
+  if(A==null||A<=0) put("err",R(i),nm+"の床面積が未入力です","area");
+  else if(A>10000) put("warn",R(i),nm+`の床面積 ${A}m² が非常に大きい値です(桁違いを確認)`,"area");
+  else if(A<1 && r.kind==="room") put("warn",R(i),nm+`の床面積 ${A}m² が非常に小さい値です`,"area");
+  // 天井高
+  if(H==null||H<=0) put("err",R(i),nm+"の平均天井高 Hroom が未入力です","Hroom");
+  else{
+   if(H>10) put("warn",R(i),nm+`の平均天井高 ${H}m が大きすぎます(mm入力・桁違いを確認)`,"Hroom");
+   else if(H<2.1 && H>1.8) put("warn",R(i),nm+`の平均天井高 ${H}m が低めです(入力値を確認)`,"Hroom");
+   if(Hlow!=null && Hlow<H) put("err",R(i),nm+`の Hlow ${Hlow}m が Hroom ${H}m より小さくなっています(Hlowは床の最低位からの高さ)`,"Hroom");
+   if(Htop!=null && Htop<H) put("err",R(i),nm+`の Htop ${Htop}m が平均天井高 ${H}m より小さくなっています`,"Hroom");
+  }
+  // 在館者密度・発熱量・歩行速度(用途プリセットとの比較)
+  if(p==null) put("err",R(i),nm+"の在館者密度 p が未入力です","p");
+  else{
+   if(p>2) put("warn",R(i),nm+`の在館者密度 ${p}人/m² が大きすぎます(桁違いを確認)`,"p");
+   if(u.p!=null && Math.abs(p-u.p)>1e-9) put("info",R(i),nm+`の p=${p} が用途「${u.label}」の告示値 ${u.p} と異なります(按分・手修正なら問題ありません)`,"p");
+   if(r.kind==="room" && r.verify && p===0) put("warn",R(i),nm+"は居室ですが在館者密度が0です(用途の選択を確認)","p");
+   if(r.kind!=="room" && p>0) put("info",R(i),nm+`は廊下等ですが在館者密度 ${p} が入力されています`,"p");
+  }
+  if(ql==null) put("err",R(i),nm+"の積載可燃物発熱量 ql が未入力です","ql");
+  else if(u.ql!=null && Math.abs(ql-u.ql)>1e-9) put("info",R(i),nm+`の ql=${ql} が用途「${u.label}」の告示値 ${u.ql} と異なります`,"ql");
+  if(v==null||v<=0) put("err",R(i),nm+"の歩行速度が未入力です","walkV");
+  else if(!CHK_SPEEDS.includes(v)) put("warn",R(i),nm+`の歩行速度 ${v}m/分 は告示の表にない値です`,"walkV");
+  else if(u.cat && WALKCAT[u.cat] && v!==WALKCAT[u.cat].other) put("info",R(i),nm+`の歩行速度 ${v}m/分 が用途区分の標準 ${WALKCAT[u.cat].other}m/分 と異なります(客席・階段区間なら問題ありません)`,"walkV");
+  // 区分・検証対象
+  if(r.kind==="room" && !r.verify) put("warn",R(i),nm+"は居室ですが「居室避難の検証対象外」になっています");
+  if(r.kind!=="room" && /廊下|通路/.test(r.name||"")===false && r.verify===false && p>0) {/* なし */}
+  if(r.kind==="room" && /廊下|通路/.test(r.name||"")) put("info",R(i),nm+"は名称が廊下・通路ですが区分が「居室」です");
+  if(r.fireExempt && r.kind==="room") put("info",R(i),nm+"は居室ですが「火災室として検証:対象外」になっています(1440号該当か確認)");
+  // 歩行距離
+  if(r.verify){
+   if(lR==null||lR<=0) put("warn",R(i),nm+"の居室出口までの歩行距離が0/未入力です","lRoomExit");
+   else if(A>0 && r.kind==="room" && lR<0.3*Math.sqrt(A)) put("warn",R(i),nm+`の居室出口までの歩行距離 ${lR}m が床面積 ${A}m² の割に短すぎます(目安 √A×0.3=${fmt(0.3*Math.sqrt(A),1)}m)`,"lRoomExit");
+  }
+  if(lS==null||lS<=0) put("warn",R(i),nm+"の直通階段出口までの歩行距離が0/未入力です(階避難の歩行時間に影響)","lStair");
+  if(lR!=null && lS!=null && lS>0 && lR>lS+1e-9) put("warn",R(i),nm+`の居室出口まで ${lR}m が直通階段出口まで ${lS}m より長くなっています(入れ違いを確認)`,"lRoomExit");
+  if(lAlt!=null && lS!=null && lAlt<lS-1e-9) put("warn",R(i),nm+`の「最大幅出口除外時」の距離 ${lAlt}m が通常時 ${lS}m より短くなっています`,"lStair");
+  // 出口
+  const ex=r.exits||[];
+  const connectedBack=rooms.some(o=>(o.exits||[]).some(e=>e.to.type==="room"&&e.to.ref===r.id));
+  if(!ex.length && !connectedBack) put("err",R(i),nm+"に出口がなく、他の室からも接続されていません(孤立)");
+  else if(!ex.length) put("warn",R(i),nm+"の出口が未入力です(他室側からのみ接続)");
+  ex.forEach((e,ei)=>{
+   const lab=nm+`の出口${ei+1}`;
+   if(!e.doorType) put("err",R(i),lab+"の建具が未選択です(計算対象外になります)");
+   if(e.to.type==="room" && !roomById(model,e.to.ref)) put("err",R(i),lab+"の接続先の室が見つかりません");
+   if(e.to.type==="stair" && !stairs.some(s=>s.id===e.to.ref)) put("err",R(i),lab+"の接続先の直通階段が見つかりません");
+  });
+  if(!reach[i] && rooms.length) put("err",R(i),nm+"から地上・直通階段まで避難できる経路がありません(接続先・避難時不使用を確認)");
+  // 付属する居室
+  const an=r.annex;
+  if(an&&an.has){
+   (an.items||[]).forEach((it,ai)=>{
+    if(it.mode==="ref" && !roomById(model,it.ref)) put("err",R(i),nm+`の付属する居室${ai+1}の参照先が未選択です`);
+    if(it.mode!=="ref" && !(+it.area>0)) put("err",R(i),nm+`の付属する居室${ai+1}の床面積が未入力です`);
+   });
+  }
+  // 排煙
+  const sm=r.smoke||{type:"none"};
+  if(sm.type!=="none"){
+   const ops=sm.openings||[];
+   if(!ops.length) put("err",R(i),nm+"は排煙設備ありですが排煙口が未入力です","smoke");
+   ops.forEach((o,oi)=>{
+    const ht=chkNum(o.ht), hb=chkNum(o.hb), w=chkNum(o.w);
+    if(!(w>0)) put("err",R(i),nm+`の排煙口${oi+1}の幅が未入力です`,"smoke");
+    if(ht!=null&&hb!=null&&ht<hb) put("err",R(i),nm+`の排煙口${oi+1}の上端 ${ht}m が下端 ${hb}m より低くなっています`,"smoke");
+    const Hc=(+r.Htop||+r.Hroom);
+    if(ht!=null && Hc>0 && ht>Hc+0.005) put("warn",R(i),nm+`の排煙口${oi+1}の上端 ${ht}m が天井高 ${Hc}m を超えています`,"smoke");
+    if(sm.type==="mech" && !(+o.cap>0)) put("err",R(i),nm+`の排煙口${oi+1}の排煙機能力wが未入力です(機械排煙)`,"smoke");
+   });
+   if(ops.length && ops.every(o=>(+o.ht||0)<1.8)) put("warn",R(i),nm+"の排煙口上端がすべて1.8m未満です(有効排煙量が0になります)","smoke");
+   if(sm.zoned){
+    if(chkNum(sm.tarekabeH)!=null && H && +sm.tarekabeH>H) put("warn",R(i),nm+`の垂れ壁下端 ${sm.tarekabeH}m が天井高 ${H}m を超えています`,"smoke");
+    if(chkNum(sm.Asc)!=null && A && +sm.Asc>A) put("err",R(i),nm+`の防煙区画面積 ${sm.Asc}m² が室の床面積 ${A}m² を超えています`,"smoke");
+   }
+  }
+ });
+ /* 両側入力の不一致(同じ室の組で、片側と反対側の建具構成が違う) */
+ const seenPair=new Set();
+ rooms.forEach((a,ia)=>(a.exits||[]).forEach(e=>{
+  if(e.to.type!=="room")return; const b=roomById(model,e.to.ref); if(!b)return;
+  const k=[a.id,b.id].sort().join("|"); if(seenPair.has(k))return; seenPair.add(k);
+  const ab=(a.exits||[]).filter(x=>x.to.type==="room"&&x.to.ref===b.id).map(x=>x.doorType||"").sort();
+  const ba=(b.exits||[]).filter(x=>x.to.type==="room"&&x.to.ref===a.id).map(x=>x.doorType||"").sort();
+  if(ab.length&&ba.length&&ab.join(",")!==ba.join(",")){
+   const nmL=l=>l.map(id=>chkDoorShort(doors.find(d=>d.id===id))).join("・");
+   put("warn",R(ia),`「${a.name}」→「${b.name}」の建具(${nmL(ab)})と、反対側「${b.name}」→「${a.name}」の建具(${nmL(ba)})が一致しません(Aopは多い側を採用)`);
+  }
+ }));
+ /* --- 計算結果から見た違和感 --- */
+ (calc.rooms||[]).forEach(rr=>{
+  const i=rooms.findIndex(x=>x.id===rr.room.id); if(i<0)return;
+  const nm=`「${rr.room.name}」`;
+  rr.warns.forEach(w=>{ if(!/避難時不使用の建具/.test(w)) put("warn",R(i),nm+": "+w); });
+  if(isFinite(rr.tsR) && rr.tescR>0 && rr.tsR/rr.tescR>10) put("info",R(i),nm+`の煙降下時間 ${fmt(rr.tsR)}分 が避難完了時間 ${fmt(rr.tescR)}分 の10倍超です(排煙量・天井高・面積の過大入力がないか)`);
+  if(rr.Vs>0 && rr.veR && rr.veR.ve>=rr.Vs) put("info",R(i),nm+"は有効排煙量Ve≧煙等発生量Vsのため煙降下時間が極大になっています(排煙入力を確認)","smoke");
+ });
+ ((calc.floor&&calc.floor.perFire)||[]).forEach(pf=>{
+  const i=rooms.findIndex(x=>x.id===pf.fire.id);
+  pf.warns.forEach(w=>put("warn",i>=0?R(i):B,`火災室「${pf.fire.name}」: ${w}`));
+ });
+ list.sort((a,b)=>CHK_LV[b.lv]-CHK_LV[a.lv]);
+ return {list,roomLv,doorLv,stairLv,cell};
+}
+/* ---------- 2. 計算(表示用。エンジンをそのまま呼ぶ) ---------- */
+function chkCalc(model){
+ const out={rooms:[],floor:null,errors:[]};
+ model.rooms.filter(r=>r.verify).forEach(r=>{ try{ out.rooms.push(calcRoomEvac(model,r)); }catch(e){ out.errors.push(r.name+": "+e.message); } });
+ try{ out.floor=calcFloor(model); }catch(e){ out.errors.push("階避難: "+e.message); }
+ return out;
+}
+/* ---------- 3. 室・建具のつながり図(SVG) ---------- */
+function chkTextW(s,px){ let w=0; for(const ch of String(s)) w+= /[\x00-\x7f]/.test(ch)? px*0.6 : px; return w; }
+function chkGraphSVG(model,F){
+ const rooms=model.rooms, stairs=model.stairs||[];
+ if(!rooms.length) return `<div class="note">室が入力されていません。</div>`;
+ const sinks=[];
+ if(rooms.some(r=>(r.exits||[]).some(e=>e.to.type==="ground"))) sinks.push({key:"g",label:"地上",sub:model.isEscape?"避難階の出口":"⚠ 避難階以外",type:"ground"});
+ stairs.forEach((s,i)=>sinks.push({key:"s:"+s.id,label:s.name||"階段",sub:`直通階段 B=${fmt(+s.width||0)} Ast=${fmt(+s.ast||0,1)}`,type:"stair",si:i}));
+ const adj=new Map(rooms.map(r=>[r.id,new Set()]));
+ rooms.forEach(r=>(r.exits||[]).forEach(e=>{ if(e.to.type==="room"&&adj.has(e.to.ref)){adj.get(r.id).add(e.to.ref);adj.get(e.to.ref).add(r.id);} }));
+ const lv=new Map(), q=[];
+ rooms.forEach(r=>{ if((r.exits||[]).some(e=>e.to.type==="ground"||(e.to.type==="stair"&&stairs.some(s=>s.id===e.to.ref)))){lv.set(r.id,1);q.push(r.id);} });
+ while(q.length){const c=q.shift();adj.get(c).forEach(n=>{if(!lv.has(n)){lv.set(n,lv.get(c)+1);q.push(n);}});}
+ let maxL=Math.max(1,...lv.values());
+ const orphan=rooms.filter(r=>!lv.has(r.id)); if(orphan.length){maxL++;orphan.forEach(r=>lv.set(r.id,maxL));}
+ const cols=[]; for(let c=0;c<=maxL;c++)cols.push([]);
+ rooms.forEach((r,i)=>cols[maxL-lv.get(r.id)].push({key:r.id,room:r,i}));
+ sinks.forEach(s=>cols[maxL].push({key:s.key,sink:s}));
+ const NW=190,NH=64,CW=330,RH=104,PX=70,PY=22;
+ const maxRows=Math.max(...cols.map(c=>c.length));
+ const pos={};
+ cols.forEach((c,ci)=>{ const off=(maxRows-c.length)*RH/2; c.forEach((n,k)=>{ pos[n.key]={x:PX+ci*CW,y:PY+off+k*RH,col:ci,n}; }); });
+ const W=PX*2+maxL*CW+NW, Hh=PY*2+(maxRows-1)*RH+NH;
+ /* 辺 */
+ const pairs=new Map();
+ rooms.forEach(r=>(r.exits||[]).forEach(e=>{
+  let t=null;
+  if(e.to.type==="ground") t="g";
+  else if(e.to.type==="stair"&&stairs.some(s=>s.id===e.to.ref)) t="s:"+e.to.ref;
+  else if(e.to.type==="room"&&roomById(model,e.to.ref)) t=e.to.ref;
+  if(!t||!pos[t]) return;
+  const k=(t==="g"||t.startsWith("s:"))? r.id+"→"+t : [r.id,t].sort().join("|");
+  if(!pairs.has(k)) pairs.set(k,{a:r.id,b:t,dirs:{}});
+  const p=pairs.get(k); (p.dirs[r.id]=p.dirs[r.id]||[]).push(e);
+ }));
+ const doors=M.doors||[];
+ const clsCol={c2:"#2a78d6",c1:"#eb6834",other:"#7d8a97"};
+ let edges="", labels="";
+ pairs.forEach(p=>{
+  const A=pos[p.a], Bp=pos[p.b]; if(!A||!Bp) return;
+  const dirKeys=Object.keys(p.dirs);
+  const lists=dirKeys.map(k=>p.dirs[k]);
+  let mism=false;
+  if(lists.length===2){ const s=l=>l.map(e=>e.doorType||"").sort().join(","); mism=s(lists[0])!==s(lists[1]); }
+  const show=lists.reduce((a,b)=>b.length>a.length?b:a,lists[0]);
+  const all=lists.flat();
+  let cls="c2"; for(const e of all){const c=(DOOR[e.door]||DOOR.none).cls; if(c==="other"){cls="other";break;} if(c==="c1")cls="c1";}
+  const allNo=show.every(e=>e.noEvac);
+  const col=mism?"var(--ng)":clsCol[cls];
+  // 幾何
+  let x1,y1,x2,y2,d;
+  const L=A.x<=Bp.x?A:Bp, Rr=A.x<=Bp.x?Bp:A;
+  let mx,my;
+  if(L.col===Rr.col){
+   const U=L.y<=Rr.y?L:Rr, Dn=L.y<=Rr.y?Rr:L;
+   if(Math.abs(Dn.y-U.y-RH)<1){ // 上下に隣接 → 縦の直線(ラベルは箱の間)
+    x1=U.x+NW/2; y1=U.y+NH; x2=Dn.x+NW/2; y2=Dn.y; d=`M${x1},${y1} L${x2},${y2}`; mx=x1; my=(y1+y2)/2;
+   }else{ // 離れている → 左側へ膨らむ曲線
+    x1=U.x; y1=U.y+NH/2; x2=Dn.x; y2=Dn.y+NH/2; const bx=x1-50;
+    d=`M${x1},${y1} C${bx},${y1} ${bx},${y2} ${x2},${y2}`; mx=bx+12; my=(y1+y2)/2;
+   }
+  }else{
+   x1=L.x+NW; y1=L.y+NH/2; x2=Rr.x; y2=Rr.y+NH/2; const dx=(x2-x1)/2;
+   d=`M${x1},${y1} C${x1+dx},${y1} ${x2-dx},${y2} ${x2},${y2}`;
+   mx=(x1+x2)/2; my=(y1+y2)/2;
+  }
+  const tip=all.map(e=>{const d0=doors.find(x=>x.id===e.doorType);return `${d0?d0.name:"(未選択)"} B=${fmt(e.width)}m 上端${fmt(e.topH)}m ${(DOOR[e.door]||DOOR.none).short}${e.noEvac?" 避難時不使用":""}`;});
+  const tipTxt=(dirKeys.length===2?"両側から入力: ":"")+tip.join(" / ")+(mism?"\n⚠ 両側の建具構成が一致しません":"");
+  edges+=`<path d="${d}" fill="none" stroke="${col}" stroke-width="${mism?2.5:2}" ${allNo?'stroke-dasharray="6 4"':""}><title>${esc(tipTxt)}</title></path>`;
+  const txt=(mism?"⚠ ":"")+show.map(e=>{const d0=doors.find(x=>x.id===e.doorType);return (d0?chkDoorShort(d0):"未選択")+" "+fmt(e.width)+(e.noEvac?"×":"");}).join("・")+(dirKeys.length===2&&!mism?" ⇄":"");
+  const tw=chkTextW(txt,11)+10;
+  labels+=`<g class="chkEdgeLbl"><title>${esc(tipTxt)}</title><rect x="${mx-tw/2}" y="${my-9}" width="${tw}" height="18" rx="4" fill="#fff" stroke="${col}" stroke-width="1"/><text x="${mx}" y="${my+4}" text-anchor="middle" font-size="11" fill="${mism?"var(--ng)":"var(--ink)"}">${esc(txt)}</text></g>`;
+ });
+ /* 節点 */
+ const smokeLbl={none:"排煙なし",natural:"自然排煙",mech:"機械排煙",special:"特殊排煙"};
+ let nodes="";
+ Object.values(pos).forEach(P=>{
+  const n=P.n;
+  if(n.sink){
+   const s=n.sink, fill=s.type==="ground"?"#e6f4ec":"#eef3f7";
+   const lvS=s.type==="stair"?F.stairLv[s.si]:null;
+   const stroke=lvS==="err"?"var(--ng)":lvS==="warn"?"var(--warn)":"#6b7a89";
+   nodes+=`<g class="chkNode${s.type==="stair"?" click":""}" ${s.type==="stair"?`onclick="chkGo('stair',${s.si})"`:""}><title>${esc(s.label+" / "+s.sub)}</title>
+    <rect x="${P.x}" y="${P.y}" width="${NW}" height="${NH}" rx="${s.type==="ground"?NH/2:6}" fill="${fill}" stroke="${stroke}" stroke-width="${lvS?2.5:1.5}"/>
+    <text x="${P.x+NW/2}" y="${P.y+27}" text-anchor="middle" font-size="13" font-weight="700" fill="var(--ink)">${esc(chkShort(s.label,13))}</text>
+    <text x="${P.x+NW/2}" y="${P.y+45}" text-anchor="middle" font-size="11" fill="var(--sub)">${esc(s.sub)}</text></g>`;
+   return;
+  }
+  const r=n.room, i=n.i, l=F.roomLv[i];
+  const fill=r.kind==="room"?"#fdf0f4":"#eef4fa";
+  const stroke=l==="err"?"var(--ng)":l==="warn"?"var(--warn)":"#8b98a5";
+  const P0=roomLoad(model,r);
+  const sm=(r.smoke||{}).type||"none";
+  const cnt=F.list.filter(x=>x.where.type==="room"&&x.where.i===i&&x.lv!=="info").length;
+  nodes+=`<g class="chkNode click" onclick="chkGo('room',${i})"><title>${esc(`${r.name}(${KIND[r.kind]||""})\n${USES[r.useKey]?.label||""}\nA=${fmt(+r.area||0)}m²  p=${r.p}  在館者${fmt(P0,1)}人\nHroom=${r.Hroom}m  ql=${r.ql}  v=${r.walkV}\n居室出口まで${r.lRoomExit}m / 直通階段まで${r.lStair}m\nクリックで③室の入力へ`)}</title>
+   <rect x="${P.x}" y="${P.y}" width="${NW}" height="${NH}" rx="6" fill="${fill}" stroke="${stroke}" stroke-width="${l==="err"||l==="warn"?2.5:1.2}"/>
+   <text x="${P.x+10}" y="${P.y+19}" font-size="12.5" font-weight="700" fill="var(--ink)">${esc(chkShort(r.name||"(無名)",13))}</text>
+   <text x="${P.x+10}" y="${P.y+37}" font-size="11" fill="var(--ink)">A=${fmt(+r.area||0,1)}m²・${fmt(P0,1)}人</text>
+   <text x="${P.x+10}" y="${P.y+54}" font-size="11" fill="var(--sub)">CH${fmt(+r.Hroom||0)}m・${smokeLbl[sm]||""}${r.fireExempt?"・火災室外":""}</text>
+   ${cnt?`<g><circle cx="${P.x+NW-12}" cy="${P.y+13}" r="9" fill="${l==="err"?"var(--ng)":"var(--warn)"}"/><text x="${P.x+NW-12}" y="${P.y+17}" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">${cnt}</text></g>`:""}
+  </g>`;
+ });
+ const colHead=cols.map((c,ci)=>{ const lvl=maxL-ci; const t=ci===maxL?"避難先":(orphan.length&&ci===0)?"⚠ 未接続":lvl===1?"直接避難できる室":`避難先まで${lvl}室目`; return `<text x="${PX+ci*CW+NW/2}" y="12" text-anchor="middle" font-size="11" fill="var(--sub)">${t}</text>`; }).join("");
+ return `<div class="chkGraphBox"><svg width="${W}" height="${Hh+8}" viewBox="0 0 ${W} ${Hh+8}" role="img" aria-label="室・建具のつながり図">${colHead}${edges}${nodes}${labels}</svg></div>
+ <div class="chkLegend"><span><svg width="28" height="10"><line x1="0" y1="5" x2="28" y2="5" stroke="#2a78d6" stroke-width="2"/></svg>遮煙2号</span><span><svg width="28" height="10"><line x1="0" y1="5" x2="28" y2="5" stroke="#eb6834" stroke-width="2"/></svg>1号(常閉/煙連動)</span><span><svg width="28" height="10"><line x1="0" y1="5" x2="28" y2="5" stroke="#7d8a97" stroke-width="2"/></svg>防火設備なし・その他</span><span><svg width="28" height="10"><line x1="0" y1="5" x2="28" y2="5" stroke="#7d8a97" stroke-width="2" stroke-dasharray="6 4"/></svg>避難時不使用(数値の後ろに×)</span><span><svg width="28" height="10"><line x1="0" y1="5" x2="28" y2="5" stroke="var(--ng)" stroke-width="2.5"/></svg>⚠ 両側の建具構成が不一致</span><span>⇄ 両側の室から同じ建具を入力</span></div>
+ <div class="small-note">室の箱をクリックすると③室の入力の該当カードへ移動します。箱の右上の数字は「エラー＋要確認」の件数です。線にマウスを乗せると建具の詳細が出ます。ラベルは「建具名 有効幅[m]」。</div>`;
+}
+/* ---------- 4. 時間の内訳グラフ ---------- */
+function chkBarRow(name,seg,ts,scale,jump,sub,tsLabel){
+ const pct=v=>Math.max(0,Math.min(100,v/scale*100));
+ const tot=seg.reduce((s,x)=>s+x.v,0);
+ const over=isFinite(ts)&&ts>scale;
+ const tsP=isFinite(ts)?pct(ts):100;
+ const ok=isFinite(ts)? tot<=ts+1e-9 : true;
+ const segH=seg.map((x,k)=>`<span class="chkSeg s${k+1}" style="width:${pct(x.v)}%" title="${escA(x.label+" "+fmt(x.v)+"分")}"></span>`).join("");
+ const margin=isFinite(ts)? ts-tot : Infinity;
+ return `<div class="chkBarRow" ${jump?`onclick="${jump}" title="クリックで入力へ移動"`:""}>
+  <div class="nm">${esc(chkShort(name,14))}${sub?`<div class="small-note">${sub}</div>`:""}</div>
+  <div class="track"><div class="segs">${segH}</div>
+   <div class="tsMark${over?" over":""}" style="left:${tsP}%" title="${escA((tsLabel||"煙降下")+" "+(isFinite(ts)?fmt(ts):"∞")+"分")}"><span>${over?"▶ ":""}煙 ${isFinite(ts)?fmt(ts):"∞"}</span></div></div>
+  <div class="val">${fmt(tot)} ${ok?"≦":"＞"} ${isFinite(ts)?fmt(ts):"∞"}分 <b class="${ok?"ok":"ng"}">${ok?"OK":"NG"}</b><div class="small-note">余裕 ${isFinite(margin)?fmt(margin):"∞"}分${isFinite(ts)&&tot>0?`(${fmt(ts/tot,1)}倍)`:""}</div></div></div>`;
+}
+function chkTimeHTML(model,calc){
+ let h="";
+ const legend=`<div class="chkLegend"><span><i class="sw s1"></i>避難開始時間</span><span><i class="sw s2"></i>歩行時間</span><span><i class="sw s3"></i>出口通過時間</span><span><i class="sw mk"></i>煙降下時間(この線より左で避難完了ならOK)</span></div>`;
+ const rr=calc.rooms||[];
+ if(rr.length){
+  const mT=Math.max(0.01,...rr.map(x=>x.tescR).filter(isFinite));
+  const scale=Math.max(mT,...rr.map(x=>isFinite(x.tsR)?Math.min(x.tsR,mT*4):0))*1.08||1;
+  h+=`<h3>居室避難(室ごと:居室避難完了時間 と 居室煙降下時間)</h3>`+legend;
+  rr.forEach(x=>{
+   const i=model.rooms.findIndex(r=>r.id===x.room.id);
+   h+=chkBarRow(x.room.name,[{v:ceil2(x.tstart),label:"避難開始"},{v:ceil2(x.ttravel),label:"歩行"},{v:ceil2(x.tqueue),label:"出口通過"}],x.tsR,scale,`chkGo('room',${i})`,`在館者${fmt(x.P,1)}人・出口有効幅計${fmt(x.exDet.reduce((s,e)=>s+e.Beff,0))}m`);
+  });
+  h+=`<div class="small-note">目盛り: 0〜${fmt(scale,1)}分(煙降下時間が枠外の室は右端に▶表示)。棒の各区間・煙の線にマウスを乗せると数値が出ます。極端に長い区間・短い区間が入力ミスの手掛かりです(例:歩行時間だけ突出→歩行距離の桁違い、出口通過時間だけ突出→出口幅・在館者密度)。</div>`;
+ }else h+=`<div class="note">居室避難の検証対象の室がありません。</div>`;
+ const pfs=(calc.floor&&calc.floor.perFire)||[];
+ if(pfs.length){
+  const mF=Math.max(0.01,...pfs.map(p=>p.tescR).filter(isFinite));
+  const scale=Math.max(mF,...pfs.map(p=>isFinite(p.tsmoke)?Math.min(p.tsmoke,mF*4):0))*1.08||1;
+  h+=`<h3 style="margin-top:18px">階避難(火災室ごと:階避難完了時間 と 階煙降下時間)</h3>`+legend;
+  pfs.forEach(p=>{
+   const i=model.rooms.findIndex(r=>r.id===p.fire.id);
+   const path=p.govPath? p.govPath.pathIds.map(id=>esc(chkShort(roomById(model,id)?.name||"",8))).join("→") : "経路なし";
+   h+=chkBarRow("火災室: "+p.fire.name,[{v:ceil2(p.tstart),label:"階避難開始"},{v:ceil2(p.ttravel),label:"歩行(支配室: "+(p.tRoomGov?p.tRoomGov.name:"")+")"},{v:ceil2(p.tqueue),label:"出口通過"}],p.tsmoke,scale,`chkGo('room',${i})`,"煙の支配経路: "+path,"階煙降下");
+  });
+  h+=`<div class="small-note">階避難の歩行時間は全室のうち最大の l/v(支配室)です。歩行区間にマウスを乗せると支配室名が出ます。</div>`;
+ }
+ return h;
+}
+/* ---------- 5. 入力値一覧(列内バー) ---------- */
+function chkMatrixHTML(model,calc,F){
+ const rooms=model.rooms; if(!rooms.length) return "";
+ const rrOf=id=>(calc.rooms||[]).find(x=>x.room.id===id);
+ const rows=rooms.map((r,i)=>{
+  const ex=(r.exits||[]).filter(e=>!e.noEvac);
+  const sB=ex.reduce((s,e)=>s+(e.width>=0.6?e.width:0),0);
+  const P=roomLoad(model,r);
+  return {r,i,area:+r.area||0,Hroom:+r.Hroom||0,p:+r.p||0,P,ql:+r.ql||0,walkV:+r.walkV||0,lRoomExit:+r.lRoomExit||0,lStair:+r.lStair||0,nEx:ex.length,nAll:(r.exits||[]).length,sB,ppm:sB>0?P/sB:(P>0?Infinity:0),rr:rrOf(r.id)};
+ });
+ const cols=[
+  {k:"area",t:"床面積A<br>[m²]",d:1,bar:true},
+  {k:"Hroom",t:"天井高<br>Hroom[m]",d:2,bar:true},
+  {k:"p",t:"密度p<br>[人/m²]",d:3,preset:r=>USES[r.useKey]?.p},
+  {k:"P",t:"在館者<br>[人]",d:1,bar:true,calc:true},
+  {k:"ql",t:"ql<br>[MJ/m²]",d:0,preset:r=>USES[r.useKey]?.ql},
+  {k:"walkV",t:"歩行速度<br>[m/分]",d:0},
+  {k:"lRoomExit",t:"居室出口<br>まで[m]",d:1,bar:true},
+  {k:"lStair",t:"直通階段<br>まで[m]",d:1,bar:true},
+  {k:"sB",t:"有効出口幅計<br>[m](個数)",d:2,bar:true,calc:true},
+  {k:"ppm",t:"出口幅1mあたり<br>在館者[人/m]",d:1,bar:true,calc:true}
+ ];
+ const mx={}; cols.forEach(c=>{ mx[c.k]=Math.max(0,...rows.map(x=>isFinite(x[c.k])?x[c.k]:0)); });
+ let h=`<div class="chkMatrixBox"><table class="t chkMatrix"><tr><th>室名</th><th>区分・用途</th>${cols.map(c=>`<th class="${c.calc?"calcCol":""}">${c.t}</th>`).join("")}<th>排煙</th><th>判定(居室)</th></tr>`;
+ rows.forEach(x=>{
+  const r=x.r, fl=F.cell[x.i]||{};
+  h+=`<tr class="${F.roomLv[x.i]?"lv-"+F.roomLv[x.i]:""}"><td class="nmc"><a href="javascript:void 0" onclick="chkGo('room',${x.i})">${esc(chkShort(r.name||"(無名)",14))}</a></td><td class="small-note">${esc(r.kind==="room"?"居室":"非居室")}・${esc(chkShort(USES[r.useKey]?.label||"",12))}</td>`;
+  cols.forEach(c=>{
+   const v=x[c.k]; const f=fl[c.k];
+   const w=c.bar&&mx[c.k]>0&&isFinite(v)? Math.min(100,v/mx[c.k]*100):0;
+   const pre=c.preset?c.preset(r):null;
+   const dev=pre!=null && Math.abs(v-pre)>1e-9;
+   let txt=isFinite(v)? (c.k==="sB"? fmt(v,2)+`(${x.nEx}${x.nAll>x.nEx?"+不使用"+(x.nAll-x.nEx):""})` : (Math.abs(v-Math.round(v))<1e-9&&c.d===0? String(v): v.toFixed(c.d))) : "∞";
+   const bg=c.bar? `background:linear-gradient(90deg,#dbe7f3 ${w}%,transparent ${w}%)`:"";
+   const go=c.calc?"":`onclick="chkGo('room',${x.i},'${c.k}')"`;
+   h+=`<td class="num${f?" f-"+f.lv:""}${c.calc?" calcCol":" clk"}" style="${bg}" ${go} title="${escA(f?f.msg:(c.calc?"計算値":"クリックで入力欄へ"))}">${f?(f.lv==="err"?"⛔ ":"⚠ "):""}${txt}${dev?`<div class="pre">告示 ${pre}</div>`:""}</td>`;
+  });
+  const sm=r.smoke||{}; const fs=fl.smoke;
+  h+=`<td class="${fs?"f-"+fs.lv:""} clk" onclick="chkGo('room',${x.i},'smoke')" title="${escA(fs?fs.msg:"")}">${fs?"⚠ ":""}${{none:"なし",natural:"自然",mech:"機械",special:"特殊"}[sm.type||"none"]}${(sm.openings||[]).length?`(${sm.openings.length})`:""}</td>`;
+  h+= x.rr? `<td class="${x.rr.ok?"ok":"ng"}">${x.rr.ok?"OK":"NG"}</td>` : `<td class="small-note">対象外</td>`;
+  h+=`</tr>`;
+ });
+ const sumA=rows.reduce((s,x)=>s+x.area,0), sumP=rows.reduce((s,x)=>s+x.P,0);
+ h+=`<tr class="sumRow"><td colspan="2">合計(室カード分)</td><td class="num">${fmt(sumA,2)}</td><td></td><td></td><td class="num">${fmt(sumP,1)}</td><td colspan="${cols.length-4+2}"></td></tr></table></div>`;
+ h+=`<div class="small-note">列内の青い帯は、その列の最大値に対する割合です(桁違いの値は帯が極端に長い/短いので目立ちます)。黄色・赤のセルはチェックに掛かった値で、マウスを乗せると理由が出ます。「告示 ○」は用途プリセットと異なる場合の告示値です。灰色の見出しの列は計算値(クリック不可)、その他のセルはクリックで③室の入力の該当欄へ移動します。</div>`;
+ return h;
+}
+/* ---------- 6. 描画・移動 ---------- */
+function chkWhereName(model,w){
+ if(w.type==="room") return "室: "+(model.rooms[w.i]?.name||"");
+ if(w.type==="door") return "建具: "+((M.doors||[])[w.i]?.name||"");
+ if(w.type==="stair") return "階段: "+((model.stairs||[])[w.i]?.name||"");
+ return "階・全体";
+}
+function chkGoArgs(w,field){
+ if(w.type==="room") return `chkGo('room',${w.i}${field?`,'${field}'`:""})`;
+ if(w.type==="door") return `chkGo('door',${w.i})`;
+ if(w.type==="stair") return `chkGo('stair',${w.i})`;
+ return `chkGo('base',0)`;
+}
+let CHK_SHOWINFO=false;
+function chkWarnHTML(model,F){
+ const n={err:0,warn:0,info:0}; F.list.forEach(x=>n[x.lv]++);
+ const shown=F.list.filter(x=>CHK_SHOWINFO||x.lv!=="info");
+ let h=`<div class="chkChips"><span class="chip err">⛔ エラー ${n.err}</span><span class="chip warn">⚠ 要確認 ${n.warn}</span><span class="chip info">ⓘ 参考 ${n.info}</span>
+  <label class="small-note"><input type="checkbox" ${CHK_SHOWINFO?"checked":""} onchange="CHK_SHOWINFO=this.checked;renderCheck()"> 参考も表示</label></div>`;
+ if(!shown.length) return h+`<div class="note" style="margin-top:6px">${F.list.length?"エラー・要確認はありません(参考のみ)。":"チェックに掛かった項目はありません。"}図・グラフでも違和感がないか確認してください。</div>`;
+ h+=`<table class="t chkWarnTbl"><tr><th style="width:70px">区分</th><th style="width:170px">対象</th><th>内容</th><th style="width:60px"></th></tr>`;
+ shown.forEach(x=>{
+  h+=`<tr class="lv-${x.lv}"><td><span class="chip ${x.lv}">${CHK_LVLABEL[x.lv]}</span></td><td>${esc(chkShort(chkWhereName(model,x.where),20))}</td><td>${esc(x.msg)}</td><td><button class="small" onclick="${chkGoArgs(x.where,x.field)}">移動</button></td></tr>`;
+ });
+ return h+`</table><div class="small-note">エラー=計算が成り立たない・明らかな矛盾、要確認=不自然な値(桁違い・入れ違いの疑い)、参考=意図的なら問題のない差異。チェックは入力ミスの「手掛かり」であり、適否の判定ではありません。</div>`;
+}
+function renderCheck(){
+ const box=document.getElementById("pane-check"); if(!box) return;
+ syncHeader();
+ const model=resolveModel(M);
+ const calc=chkCalc(model);
+ const F=chkCollect(model,calc);
+ CHK_LAST={model,calc,F};
+ const sumA=model.rooms.reduce((s,r)=>s+(+r.area||0),0);
+ const sumAll=calc.floor?calc.floor.sumAall:sumA;
+ const fa=chkNum(M.chkFloorArea);
+ const diff=(fa&&fa>0)?(sumAll-fa)/fa:null;
+ document.getElementById("chkHead").innerHTML=`<div class="grid">
+   <div class="f"><label>求積図の階床面積 [m²](照合用・任意)</label><input type="number" step="0.01" value="${M.chkFloorArea??""}" onchange="M.chkFloorArea=this.value;renderCheck()"></div>
+   <div class="f"><label>室面積の合計(付属居室の手入力分を含む)</label><div style="font-size:15px;font-weight:700;padding:4px 0">${fmt(sumAll)} m²${diff!=null?` <span class="${Math.abs(diff)>0.01?"ng":"ok"}" style="font-size:12.5px">(差 ${fmt(sumAll-fa)}m² / ${(diff*100).toFixed(2)}%)</span>`:""}</div></div>
+   <div class="f"><label>在館者数の合計</label><div style="font-size:15px;font-weight:700;padding:4px 0">${fmt(calc.floor?calc.floor.sumPA:0,1)} 人</div></div>
+   <div class="f"><label>室 / 建具 / 直通階段</label><div style="font-size:15px;font-weight:700;padding:4px 0">${model.rooms.length} / ${(M.doors||[]).length} / ${(model.stairs||[]).length}</div></div>
+   <div class="f"><button onclick="renderCheck()">再チェック</button></div>
+  </div>${calc.errors.length?`<div class="warn">⚠ 計算中にエラー: ${esc(calc.errors.join(" / "))}</div>`:""}`;
+ document.getElementById("chkWarn").innerHTML=chkWarnHTML(model,F);
+ document.getElementById("chkGraph").innerHTML=chkGraphSVG(model,F);
+ document.getElementById("chkTime").innerHTML=chkTimeHTML(model,calc);
+ document.getElementById("chkMatrix").innerHTML=chkMatrixHTML(model,calc,F);
+}
+function chkFlash(el){ if(!el)return; el.scrollIntoView({block:"center",behavior:"smooth"}); el.classList.remove("chkFlash"); void el.offsetWidth; el.classList.add("chkFlash"); }
+function chkGo(type,i,field){
+ if(type==="room"){
+  if(!M.rooms[i]) return;
+  M.rooms[i]._fold=false; renderRooms(); showTab("rooms");
+  const card=document.querySelectorAll("#roomsArea .roomCard")[i]; if(!card) return;
+  let el=null;
+  if(field==="smoke") el=card.querySelector(`select[onchange^="M.rooms[${i}].smoke.type"]`);
+  else if(field==="Hroom") el=card.querySelector(`input[oninput^="M.rooms[${i}].Hroom="]`);
+  else if(field) el=card.querySelector(`input[oninput^="M.rooms[${i}].${field}="]`);
+  if(el){ chkFlash(el.closest(".f")||el); setTimeout(()=>{try{el.focus({preventScroll:true});}catch(e){}},350); }
+  else chkFlash(card);
+ }else if(type==="door"){
+  DOOR_FILTER=""; renderDoors(); showTab("doors");
+  chkFlash(document.querySelector(`#doorTbl tr[ondragstart="dragDoor(event,${i})"]`));
+ }else if(type==="stair"){
+  showTab("base"); chkFlash(document.querySelectorAll("#stairTbl tr")[i+1]);
+ }else{
+  showTab("base"); chkFlash(document.getElementById("isEscape").closest(".card"));
+ }
+}
+
+/* v1.7 変更点:
+   ・⑧入力チェックタブを追加(要確認リスト・室と建具のつながり図・時間の内訳グラフ・入力値一覧)。計算エンジンは変更なし
+   ・求積図の階床面積(照合用)をJSONに保存(M.chkFloorArea) */
 /* ---------- しおり(入力の中断位置) ---------- */
 function bmInfo(){
  const b=M.bookmark; if(!b||!b.roomId) return null;
