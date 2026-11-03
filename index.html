@@ -172,7 +172,10 @@ tr.noEvacRow>td{background:#fbf1e3}
 #pane-check .chkGraphBox svg{display:block}
 #pane-check .pcBar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px;font-size:13px}
 #pane-check #pcBox .pcNode{cursor:move}
-#pane-check #pcBox .pcHandle{cursor:nwse-resize}
+#pane-check #pcBox .pcEdgeW{cursor:ew-resize}
+#pane-check #pcBox .pcEdgeH{cursor:ns-resize}
+#pane-check #pcBox .pcGrip{opacity:0;pointer-events:none;transition:opacity .15s;fill:none;stroke:#34404c;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+#pane-check #pcBox .pcNode:hover .pcGrip{opacity:.75}
 #pane-check #pcBox .pcDoor{pointer-events:visiblePainted}
 #pane-check .chkNode.click{cursor:pointer}
 #pane-check .chkNode.click:hover rect{filter:brightness(.96)}
@@ -2169,11 +2172,16 @@ function ponchiSVG(model,D,pos,frozen){
   const title=n.type==="room"?`${nm(n.key)}(${KIND[n.room.kind]||""})\nA=${fmt(+n.room.area||0)}m²  ${fmt(p.w,1)}×${fmt(p.h,1)}m(仮の形)`:`${nm(n.key)}(直通階段)\nAst=${fmt(n.A,1)}m²`;
   const fs=Math.max(8,Math.min(12.5,w/6)), ch=Math.max(1,Math.floor((w-8)/fs));
   const sub=n.type==="room"?`${fmt(+n.room.area||0,1)}m²`:"直通階段";
+  const rr=Math.min(10,w/5,h/5).toFixed(1), gs=Math.min(14,w/3,h/3);
   body+=`<g data-pk="${escA(n.key)}" class="pcNode"><title>${esc(title)}</title>
-   <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}" stroke="${ov?"var(--ng)":"#34404c"}" stroke-width="${ov?2.5:1.6}" ${ov?'stroke-dasharray="5 3"':""}/>
+   <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rr}" fill="${fill}" stroke="${ov?"var(--ng)":"#34404c"}" stroke-width="${ov?2.5:1.6}" ${ov?'stroke-dasharray="5 3"':""}/>
    ${h>fs*1.4?`<text x="${x+w/2}" y="${y+h/2-(h>fs*3?2:-fs/2+2)}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="var(--ink)" ${n.type==="stair"?'paint-order="stroke" stroke="#fff" stroke-width="3"':""}>${esc(chkShort(nm(n.key),ch))}</text>`:""}
    ${h>fs*3?`<text x="${x+w/2}" y="${y+h/2+fs}" text-anchor="middle" font-size="${fs-1.5}" fill="var(--sub)" paint-order="stroke" stroke="${n.type==="stair"?"#fff":"none"}" stroke-width="3">${esc(sub)}</text>`:""}
-   <rect data-act="resize" x="${x+w-9}" y="${y+h-9}" width="8" height="8" fill="#fff" stroke="#8b98a5" class="pcHandle"><title>ドラッグで縦横比を変更(面積は一定)</title></rect>
+   <g class="pcGrip">${[[x+w,y+h/2,1,0],[x,y+h/2,1,0],[x+w/2,y,0,1],[x+w/2,y+h,0,1]].map(([cx,cy,ax,ay])=>`<path d="M${cx-ax*gs},${cy-ay*gs} L${cx+ax*gs},${cy+ay*gs} M${cx-ax*gs+ax*4-ay*4},${cy-ay*gs+ay*4-ax*4} L${cx-ax*gs},${cy-ay*gs} L${cx-ax*gs+ax*4+ay*4},${cy-ay*gs+ay*4+ax*4} M${cx+ax*gs-ax*4-ay*4},${cy+ay*gs-ay*4-ax*4} L${cx+ax*gs},${cy+ay*gs} L${cx+ax*gs-ax*4+ay*4},${cy+ay*gs-ay*4+ax*4}"/>`).join("")}</g>
+   <rect data-act="eR" x="${x+w-6}" y="${y+rr*1}" width="12" height="${Math.max(0,h-rr*2)}" fill="transparent" class="pcEdgeW"><title>ドラッグで横幅を変更(面積は一定で奥行きが追従)</title></rect>
+   <rect data-act="eL" x="${x-6}" y="${y+rr*1}" width="12" height="${Math.max(0,h-rr*2)}" fill="transparent" class="pcEdgeW"><title>ドラッグで横幅を変更(面積は一定で奥行きが追従)</title></rect>
+   <rect data-act="eB" x="${x+rr*1}" y="${y+h-6}" width="${Math.max(0,w-rr*2)}" height="12" fill="transparent" class="pcEdgeH"><title>ドラッグで奥行きを変更(面積は一定で横幅が追従)</title></rect>
+   <rect data-act="eT" x="${x+rr*1}" y="${y-6}" width="${Math.max(0,w-rr*2)}" height="12" fill="transparent" class="pcEdgeH"><title>ドラッグで奥行きを変更(面積は一定で横幅が追従)</title></rect>
   </g>`;
  });
  /* 室間・階段への建具 */
@@ -2254,7 +2262,7 @@ function ponchiHTML(model){
   <button type="button" onclick="ponchiSaveSVG()">SVG保存</button></div>
  <div id="pcBox" class="chkGraphBox"></div><div id="pcNotes"></div>
  <div class="chkLegend"><span><svg width="28" height="12"><line x1="2" y1="10" x2="2" y2="1" stroke="#2a78d6" stroke-width="1.8"/><path d="M2,1 A9 9 0 0 1 11,10" fill="none" stroke="#2a78d6" stroke-dasharray="2 2"/></svg>遮煙2号</span><span><svg width="28" height="12"><line x1="2" y1="10" x2="2" y2="1" stroke="#eb6834" stroke-width="1.8"/><path d="M2,1 A9 9 0 0 1 11,10" fill="none" stroke="#eb6834" stroke-dasharray="2 2"/></svg>1号(常閉/煙連動)</span><span><svg width="28" height="12"><line x1="2" y1="10" x2="2" y2="1" stroke="#56636f" stroke-width="1.8"/><path d="M2,1 A9 9 0 0 1 11,10" fill="none" stroke="#56636f" stroke-dasharray="2 2"/></svg>防火設備なし・その他</span><span><svg width="28" height="10"><line x1="2" y1="5" x2="26" y2="5" stroke="#56636f" stroke-width="2.2" stroke-dasharray="3 2"/></svg>避難時不使用</span><span><svg width="28" height="10"><line x1="2" y1="5" x2="26" y2="5" stroke="#56636f" stroke-width="1.4" stroke-dasharray="5 4"/></svg>壁が接していない室間の建具</span><span>扉の開く向き = 入力した室から避難する向き</span></div>
- <div class="small-note">室の大きさは床面積どおり(形は仮の矩形)です。室をドラッグで移動(他の室の壁に吸着)、右下の□のドラッグで縦横比を変更、ダブルクリックで90°回転します。配置はJSONに保存されます。建具は2室が接する壁の上に入力順で等間隔に並べ、幅は有効幅Bの縮尺です。</div>`;
+ <div class="small-note">室の大きさは床面積どおり(形は仮の矩形)です。室をドラッグで移動(他の室の壁に吸着)、四辺のドラッグで縦横を変更(面積は一定のまま反対方向が追従し、他の室と接している側は固定。マウスを乗せると矢印が出ます)、ダブルクリックで90°回転します。配置はJSONに保存されます。建具は2室が接する壁の上に入力順で等間隔に並べ、幅は有効幅Bの縮尺です。</div>`;
 }
 function ponchiRelayout(){
  if(M.ponchi&&M.ponchi.pos&&Object.keys(M.ponchi.pos).length&&!confirm("ドラッグで調整した配置を破棄して自動配置し直しますか?")) return;
@@ -2287,9 +2295,22 @@ function ponchiBind(){
   const pos=M.ponchi.pos, p=pos[d.key];
   const others=Object.keys(pos).filter(k=>k!==d.key&&PONCHI_CTX&&(roomById(PONCHI_CTX,k)||(k.startsWith("s:")&&(PONCHI_CTX.stairs||[]).some(st=>"s:"+st.id===k)))).map(k=>pos[k]);
   const xe=others.flatMap(o=>[o.x,o.x+o.w]), ye=others.flatMap(o=>[o.y,o.y+o.h]);
-  if(d.act==="resize"){
-   const A=d.o.w*d.o.h, R=pcSnapAxis(d.o.x+Math.max(0.8,d.o.w+dx),0,xe,thr,0.1);
-   p.w=+Math.max(0.8,R-d.o.x).toFixed(3); p.h=+(A/p.w).toFixed(3);
+  const A=d.o.w*d.o.h;
+  if(d.act[0]==="e"){ // 辺のドラッグ: 反対側の辺を固定して寸法を変え、面積一定でもう一方の寸法を追従
+   const o=d.o, hz=d.act==="eL"||d.act==="eR", e=0.02;
+   const touch=(side)=>others.some(q=>{ // 元の矩形のside辺に他の室が接しているか
+    if(side==="T"||side==="B"){ const at=side==="T"?o.y:o.y+o.h, qa=side==="T"?q.y+q.h:q.y; return Math.abs(qa-at)<e&&Math.min(o.x+o.w,q.x+q.w)-Math.max(o.x,q.x)>e; }
+    const at=side==="L"?o.x:o.x+o.w, qa=side==="L"?q.x+q.w:q.x; return Math.abs(qa-at)<e&&Math.min(o.y+o.h,q.y+q.h)-Math.max(o.y,q.y)>e; });
+   const lim=v=>Math.min(A/0.8,Math.max(0.8,v));
+   if(hz){
+    const w=d.act==="eR"? lim(pcSnapAxis(o.x+o.w+dx,0,xe,thr,0.1)-o.x) : lim(o.x+o.w-pcSnapAxis(o.x+dx,0,xe,thr,0.1));
+    p.w=+w.toFixed(3); p.h=+(A/w).toFixed(3); p.x=+(d.act==="eR"?o.x:o.x+o.w-w).toFixed(3);
+    p.y=+((touch("B")&&!touch("T"))? o.y+o.h-p.h : o.y).toFixed(3);
+   }else{
+    const h=d.act==="eB"? lim(pcSnapAxis(o.y+o.h+dy,0,ye,thr,0.1)-o.y) : lim(o.y+o.h-pcSnapAxis(o.y+dy,0,ye,thr,0.1));
+    p.h=+h.toFixed(3); p.w=+(A/h).toFixed(3); p.y=+(d.act==="eB"?o.y:o.y+o.h-h).toFixed(3);
+    p.x=+((touch("R")&&!touch("L"))? o.x+o.w-p.w : o.x).toFixed(3);
+   }
   }else{
    p.x=+pcSnapAxis(d.o.x+dx,p.w,xe,thr,0.5).toFixed(3); p.y=+pcSnapAxis(d.o.y+dy,p.h,ye,thr,0.5).toFixed(3);
   }
