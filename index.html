@@ -170,6 +170,10 @@ tr.noEvacRow>td{background:#fbf1e3}
 #pane-check .chkWarnTbl tr.lv-warn td{background:#fffaf0}
 #pane-check .chkGraphBox{overflow:auto;border:1px solid var(--line);border-radius:6px;background:#fcfcfb;padding:6px}
 #pane-check .chkGraphBox svg{display:block}
+#pane-check .pcBar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px;font-size:13px}
+#pane-check #pcBox .pcNode{cursor:move}
+#pane-check #pcBox .pcHandle{cursor:nwse-resize}
+#pane-check #pcBox .pcDoor{pointer-events:visiblePainted}
 #pane-check .chkNode.click{cursor:pointer}
 #pane-check .chkNode.click:hover rect{filter:brightness(.96)}
 #pane-check .chkEdgeLbl{cursor:default}
@@ -554,13 +558,14 @@ tr.noEvacRow>td{background:#fbf1e3}
 <div id="pane-check" style="display:none">
 <div class="card">
  <h2>8. 入力チェック(図とグラフで入力ミスを探す)</h2>
- <div class="small-note" style="margin-bottom:8px">このタブを開いた時点の入力値で自動的に計算し、①ルールによる要確認リスト ②室・建具のつながり図 ③時間の内訳グラフ ④入力値一覧 を表示します。「計算実行」は不要です。表示のみで、判定結果・計算書には影響しません(求積図の階床面積だけはJSONに保存されます)。各項目をクリックすると該当する入力欄へ移動します。</div>
+ <div class="small-note" style="margin-bottom:8px">このタブを開いた時点の入力値で自動的に計算し、①ルールによる要確認リスト ②室・建具のつながり図 ③時間の内訳グラフ ④入力値一覧 ⑤平面ポンチ絵 を表示します。「計算実行」は不要です。表示のみで、判定結果・計算書には影響しません(求積図の階床面積とポンチ絵の配置だけはJSONに保存されます)。各項目をクリックすると該当する入力欄へ移動します。</div>
  <div id="chkHead"></div>
 </div>
 <div class="card"><h2>8-1. 要確認リスト</h2><div id="chkWarn"></div></div>
 <div class="card"><h2>8-2. 室・建具のつながり図(避難先を右端に配置)</h2><div id="chkGraph"></div></div>
 <div class="card"><h2>8-3. 時間の内訳と煙降下時間</h2><div id="chkTime"></div></div>
 <div class="card"><h2>8-4. 入力値一覧(列内バーで桁違いを発見)</h2><div id="chkMatrix"></div></div>
+<div class="card"><h2>8-5. 平面ポンチ絵(室と建具の配置イメージ)</h2><div id="chkPonchi"></div></div>
 </div><!-- pane-check -->
 </div><!-- inputArea -->
 
@@ -2019,6 +2024,284 @@ function chkGraphSVG(model,F){
  <div class="chkLegend"><span><svg width="28" height="10"><line x1="0" y1="5" x2="28" y2="5" stroke="#2a78d6" stroke-width="2"/></svg>遮煙2号</span><span><svg width="28" height="10"><line x1="0" y1="5" x2="28" y2="5" stroke="#eb6834" stroke-width="2"/></svg>1号(常閉/煙連動)</span><span><svg width="28" height="10"><line x1="0" y1="5" x2="28" y2="5" stroke="#7d8a97" stroke-width="2"/></svg>防火設備なし・その他</span><span><svg width="28" height="10"><line x1="0" y1="5" x2="28" y2="5" stroke="#7d8a97" stroke-width="2" stroke-dasharray="6 4"/></svg>避難時不使用(数値の後ろに×)</span><span><svg width="28" height="10"><line x1="0" y1="5" x2="28" y2="5" stroke="var(--ng)" stroke-width="2.5"/></svg>⚠ 両側の建具構成が不一致</span><span>⇄ 両側の室から同じ建具を入力</span></div>
  <div class="small-note">室の箱をクリックすると③室の入力の該当カードへ移動します。箱の右上の数字は「エラー＋要確認」の件数です。線にマウスを乗せると建具の詳細が出ます。ラベルは「建具名 有効幅[m]」。</div>`;
 }
+/* ---------- 5. 平面ポンチ絵(室と建具の配置イメージ) ----------
+   室=床面積なりの矩形、建具=接する壁上の開口+開き勝手。配置は自動(接続のある室どうしを壁で接するよう貪欲配置)、
+   ドラッグで調整した位置は M.ponchi.pos に[m]単位で保存(JSONに含まれる)。計算・計算書には影響しない。 */
+let PONCHI_CTX=null, PONCHI_VIEW=null, PONCHI_DRAG=null;
+function ponchiData(model){
+ const nodes=[], byKey={};
+ model.rooms.forEach((r,i)=>{const n={key:r.id,type:"room",room:r,i,A:Math.max(+r.area||0,1)};nodes.push(n);byKey[n.key]=n;});
+ (model.stairs||[]).forEach((s,si)=>{const n={key:"s:"+s.id,type:"stair",stair:s,si,A:Math.max(+s.ast||0,6)};nodes.push(n);byKey[n.key]=n;});
+ const adj=new Map(nodes.map(n=>[n.key,new Map()])), pairs=new Map(), ground=new Map();
+ model.rooms.forEach(r=>(r.exits||[]).forEach(e=>{
+  if(e.to.type==="ground"){ if(!ground.has(r.id)) ground.set(r.id,[]); ground.get(r.id).push(e); return; }
+  const t=e.to.type==="stair"?"s:"+e.to.ref:e.to.type==="room"?e.to.ref:null;
+  if(!t||!byKey[t]||t===r.id) return;
+  const k=[r.id,t].sort().join("|");
+  if(!pairs.has(k)) pairs.set(k,{a:r.id,b:t,dirs:{}});
+  const p=pairs.get(k); (p.dirs[r.id]=p.dirs[r.id]||[]).push(e);
+ }));
+ pairs.forEach(p=>{ adj.get(p.a).set(p.b,1); adj.get(p.b).set(p.a,1); });
+ return {nodes,byKey,adj,pairs,ground};
+}
+function pcShapes(n,deg){ // 候補の縦横比(w/h)。廊下は接続数に応じて細長く
+ let qs=[1,1.5,1/1.5];
+ if(n.type==="stair") qs=[2,0.5];
+ else if(n.room.kind==="corridor"){ const q=Math.min(10,Math.max(3,deg+1)); qs=[q,1/q]; }
+ return qs.map(q=>{const w=Math.sqrt(n.A*q);return {w,h:n.A/w};});
+}
+function pcOverlap(a,b){ return Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x)>1e-3 && Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y)>1e-3; }
+function pcGap(a,b){ const dx=Math.max(0,Math.max(a.x,b.x)-Math.min(a.x+a.w,b.x+b.w)), dy=Math.max(0,Math.max(a.y,b.y)-Math.min(a.y+a.h,b.y+b.h)); return Math.hypot(dx,dy); }
+function pcContact(a,b){ // aとbが共有する壁(dir: aから見たbの向き +1/-1)
+ const e=0.02, lx=Math.max(a.x,b.x), hx=Math.min(a.x+a.w,b.x+b.w), ly=Math.max(a.y,b.y), hy=Math.min(a.y+a.h,b.y+b.h);
+ if(hy-ly>e){
+  if(Math.abs(a.x+a.w-b.x)<e) return {v:true,at:b.x,lo:ly,hi:hy,len:hy-ly,dir:1};
+  if(Math.abs(b.x+b.w-a.x)<e) return {v:true,at:a.x,lo:ly,hi:hy,len:hy-ly,dir:-1};
+ }
+ if(hx-lx>e){
+  if(Math.abs(a.y+a.h-b.y)<e) return {v:false,at:b.y,lo:lx,hi:hx,len:hx-lx,dir:1};
+  if(Math.abs(b.y+b.h-a.y)<e) return {v:false,at:a.y,lo:lx,hi:hx,len:hx-lx,dir:-1};
+ }
+ return null;
+}
+function pcBBox(rs){ const b={x1:Infinity,y1:Infinity,x2:-Infinity,y2:-Infinity};
+ rs.forEach(r=>{b.x1=Math.min(b.x1,r.x);b.y1=Math.min(b.y1,r.y);b.x2=Math.max(b.x2,r.x+r.w);b.y2=Math.max(b.y2,r.y+r.h);}); return b; }
+function ponchiLayout(D,fixed){ // 未配置の室を1室ずつ、接続先の壁に接する位置の中から評価値最小の位置へ置く
+ const P={}; Object.keys(fixed).forEach(k=>{ if(D.byKey[k]) P[k]=fixed[k]; });
+ const deg=k=>D.adj.get(k).size;
+ const left=D.nodes.filter(n=>!P[n.key]);
+ while(left.length){
+  let bi=0,bs=-1;
+  left.forEach((n,i)=>{ let c=0; D.adj.get(n.key).forEach((_,k)=>{ if(P[k]) c++; });
+   const s=c*100+deg(n.key)+(n.type==="room"&&n.room.kind==="corridor"?0.5:0); if(s>bs){bs=s;bi=i;} });
+  const n=left.splice(bi,1)[0];
+  const shapes=pcShapes(n,deg(n.key));
+  const placed=Object.keys(P);
+  if(!placed.length){ P[n.key]={x:0,y:0,w:shapes[0].w,h:shapes[0].h}; continue; }
+  const rects=placed.map(k=>P[k]);
+  const nb=[...D.adj.get(n.key).keys()].filter(k=>P[k]);
+  const anchors=nb.length?nb:placed;
+  const B0=pcBBox(rects), per0=(B0.x2-B0.x1)+(B0.y2-B0.y1);
+  const u=Math.sqrt(rects.reduce((s,r)=>s+r.w*r.h,0)+n.A);
+  const xs=[],ys=[]; rects.forEach(r=>{xs.push(r.x,r.x+r.w);ys.push(r.y,r.y+r.h);});
+  let best=null,bestS=Infinity; const seen=new Set();
+  shapes.forEach((sh,si)=>{
+   const {w,h}=sh;
+   const tryC=(x,y)=>{
+    const sk=x.toFixed(2)+","+y.toFixed(2)+","+si; if(seen.has(sk)) return; seen.add(sk);
+    const c={x,y,w,h};
+    if(rects.some(r=>pcOverlap(c,r))) return;
+    let s=si*0.8;
+    nb.forEach(k=>{ const Q=P[k], ct=pcContact(c,Q), need=Math.min(1.2,c.w,c.h,Q.w,Q.h)*0.99;
+     if(ct&&ct.len>=need) s-=Math.min(ct.len,u)/u*2; else s+=1000+pcGap(c,Q)*30; });
+    const bw=Math.max(B0.x2,c.x+w)-Math.min(B0.x1,c.x), bh=Math.max(B0.y2,c.y+h)-Math.min(B0.y1,c.y);
+    s+=(bw+bh-per0)/u*10 + Math.max(0,Math.max(bw/bh,bh/bw)-1.6)*8;
+    if(s<bestS){bestS=s;best=c;}
+   };
+   anchors.forEach(k=>{ const Q=P[k];
+    [Q.x,Q.x+Q.w-w,Q.x+(Q.w-w)/2,...xs,...xs.map(v=>v-w)].forEach(x=>{ tryC(x,Q.y-h); tryC(x,Q.y+Q.h); });
+    [Q.y,Q.y+Q.h-h,Q.y+(Q.h-h)/2,...ys,...ys.map(v=>v-h)].forEach(y=>{ tryC(Q.x-w,y); tryC(Q.x+Q.w,y); });
+   });
+  });
+  if(!best) best={x:B0.x2+1,y:B0.y1,w:shapes[0].w,h:shapes[0].h};
+  P[n.key]=best;
+ }
+ Object.values(P).forEach(p=>["x","y","w","h"].forEach(f=>p[f]=+p[f].toFixed(3)));
+ return P;
+}
+function ponchiPos(D){ // 保存済みの配置+不足分を自動配置(面積が変わった室は縦横比を保って補正)
+ M.ponchi=M.ponchi||{};
+ const pos=M.ponchi.pos=M.ponchi.pos||{};
+ D.nodes.forEach(n=>{ const p=pos[n.key]; if(p&&Math.abs(p.w*p.h-n.A)>n.A*0.005){ const q=p.w/p.h; p.w=+Math.sqrt(n.A*q).toFixed(3); p.h=+(n.A/p.w).toFixed(3); } });
+ if(D.nodes.some(n=>!pos[n.key])) Object.assign(pos,ponchiLayout(D,pos));
+ return pos;
+}
+function pcFree(R,others){ // Rの外周のうち他の矩形と接していない区間
+ const e=0.02, out=[];
+ [{v:false,at:R.y,lo:R.x,hi:R.x+R.w,n:-1},{v:false,at:R.y+R.h,lo:R.x,hi:R.x+R.w,n:1},{v:true,at:R.x,lo:R.y,hi:R.y+R.h,n:-1},{v:true,at:R.x+R.w,lo:R.y,hi:R.y+R.h,n:1}].forEach(sd=>{
+  let iv=[[sd.lo,sd.hi]];
+  others.forEach(O=>{
+   const oAt=sd.v?(sd.n>0?O.x:O.x+O.w):(sd.n>0?O.y:O.y+O.h);
+   if(Math.abs(oAt-sd.at)>e) return;
+   const a=sd.v?O.y:O.x, b=sd.v?O.y+O.h:O.x+O.w;
+   iv=iv.flatMap(([l,h])=>{ if(b<=l||a>=h) return [[l,h]]; const r=[]; if(a>l) r.push([l,a]); if(b<h) r.push([b,h]); return r; });
+  });
+  iv.forEach(([l,h])=>{ if(h-l>e) out.push(Object.assign({},sd,{lo:l,hi:h,len:h-l})); });
+ });
+ return out;
+}
+function pcDoor(C,t,n,wpx,dbl,col,noEvac,lbl,tip){ // C:開口中心[px] t:壁方向 n:開く向き(避難方向)
+ const P=(p,v,k)=>[p[0]+v[0]*k,p[1]+v[1]*k], f=p=>p[0].toFixed(1)+","+p[1].toFixed(1);
+ const a=P(C,t,-wpx/2), b=P(C,t,wpx/2);
+ let g=`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#fff" stroke-width="4"/>`;
+ if(noEvac) g+=`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${col}" stroke-width="2.2" stroke-dasharray="3 2"/>`;
+ else {
+  const leaf=(H,dt,len)=>{ const L=P(H,n,len), E=P(H,dt,len), sw=(n[0]*dt[1]-n[1]*dt[0])>0?1:0;
+   return `<line x1="${H[0]}" y1="${H[1]}" x2="${L[0]}" y2="${L[1]}" stroke="${col}" stroke-width="1.8"/><path d="M${f(L)} A${len.toFixed(1)} ${len.toFixed(1)} 0 0 ${sw} ${f(E)}" fill="none" stroke="${col}" stroke-width="0.9" stroke-dasharray="2 2"/>`; };
+  g+=dbl? leaf(a,t,wpx/2)+leaf(b,[-t[0],-t[1]],wpx/2) : leaf(a,t,wpx);
+ }
+ if(lbl){ const L=P(C,n,-9), anc=n[0]>0?"end":n[0]<0?"start":"middle", dy=n[1]>0?-1:n[1]<0?9:4;
+  g+=`<text x="${L[0].toFixed(1)}" y="${(L[1]+dy).toFixed(1)}" text-anchor="${anc}" font-size="10" fill="${col}" font-weight="700">${esc(lbl)}</text>`; }
+ return `<g class="pcDoor"><title>${esc(tip)}</title>${g}</g>`;
+}
+function ponchiSVG(model,D,pos,frozen){
+ if(!D.nodes.length) return `<div class="note">室が入力されていません。</div>`;
+ const rects=D.nodes.map(n=>pos[n.key]);
+ if(!frozen||!PONCHI_VIEW){
+  const B=pcBBox(rects), bw=Math.max(B.x2-B.x1,1), bh=Math.max(B.y2-B.y1,1);
+  const s=Math.max(2,Math.min(40,1000/bw,680/bh)), PAD=56;
+  PONCHI_VIEW={s,ox:B.x1,oy:B.y1,PAD,W:Math.ceil(bw*s+PAD*2),H:Math.ceil(bh*s+PAD*2)};
+ }
+ const V=PONCHI_VIEW, s=V.s, X=x=>(x-V.ox)*s+V.PAD, Y=y=>(y-V.oy)*s+V.PAD;
+ const doors=M.doors||[], showLbl=!(M.ponchi&&M.ponchi.hideLbl);
+ const clsCol={c2:"#2a78d6",c1:"#eb6834",other:"#56636f"};
+ const colOf=e=>clsCol[(DOOR[e.door]||DOOR.none).cls]||clsCol.other;
+ const dName=e=>{const d0=doors.find(x=>x.id===e.doorType);return d0?chkDoorShort(d0):"未選択";};
+ const dTip=e=>{const d0=doors.find(x=>x.id===e.doorType);return `${d0?d0.name:"(建具未選択)"} B=${fmt(+e.width||0)}m ${(DOOR[e.door]||DOOR.none).short}${e.noEvac?" 避難時不使用":""}`;};
+ const nm=k=>{const n=D.byKey[k];return n.type==="room"?(n.room.name||"(無名)"):(n.stair.name||"階段");};
+ /* 室・階段 */
+ let body="", over=[];
+ D.nodes.forEach((n,i)=>{ for(let j=i+1;j<D.nodes.length;j++) if(pcOverlap(pos[n.key],pos[D.nodes[j].key])) over.push(nm(n.key)+" と "+nm(D.nodes[j].key)); });
+ D.nodes.forEach(n=>{
+  const p=pos[n.key], x=X(p.x), y=Y(p.y), w=p.w*s, h=p.h*s;
+  const ov=D.nodes.some(o=>o!==n&&pcOverlap(p,pos[o.key]));
+  const fill=n.type==="stair"?`url(#pcSt${p.w>=p.h?"V":"H"})`:n.room.kind==="room"?"#fdf0f4":n.room.kind==="lobby"?"#eef7f1":"#eef4fa";
+  const title=n.type==="room"?`${nm(n.key)}(${KIND[n.room.kind]||""})\nA=${fmt(+n.room.area||0)}m²  ${fmt(p.w,1)}×${fmt(p.h,1)}m(仮の形)`:`${nm(n.key)}(直通階段)\nAst=${fmt(n.A,1)}m²`;
+  const fs=Math.max(8,Math.min(12.5,w/6)), ch=Math.max(1,Math.floor((w-8)/fs));
+  const sub=n.type==="room"?`${fmt(+n.room.area||0,1)}m²`:"直通階段";
+  body+=`<g data-pk="${escA(n.key)}" class="pcNode"><title>${esc(title)}</title>
+   <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}" stroke="${ov?"var(--ng)":"#34404c"}" stroke-width="${ov?2.5:1.6}" ${ov?'stroke-dasharray="5 3"':""}/>
+   ${h>fs*1.4?`<text x="${x+w/2}" y="${y+h/2-(h>fs*3?2:-fs/2+2)}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="var(--ink)" ${n.type==="stair"?'paint-order="stroke" stroke="#fff" stroke-width="3"':""}>${esc(chkShort(nm(n.key),ch))}</text>`:""}
+   ${h>fs*3?`<text x="${x+w/2}" y="${y+h/2+fs}" text-anchor="middle" font-size="${fs-1.5}" fill="var(--sub)" paint-order="stroke" stroke="${n.type==="stair"?"#fff":"none"}" stroke-width="3">${esc(sub)}</text>`:""}
+   <rect data-act="resize" x="${x+w-9}" y="${y+h-9}" width="8" height="8" fill="#fff" stroke="#8b98a5" class="pcHandle"><title>ドラッグで縦横比を変更(面積は一定)</title></rect>
+  </g>`;
+ });
+ /* 室間・階段への建具 */
+ let dsvg="", links="", apart=[];
+ D.pairs.forEach(pr=>{
+  const keys=Object.keys(pr.dirs), lists=keys.map(k=>pr.dirs[k]);
+  let mism=false; if(lists.length===2){ const sg=l=>l.map(e=>e.doorType||"").sort().join(","); mism=sg(lists[0])!==sg(lists[1]); }
+  let si=0; lists.forEach((l,k)=>{ if(l.length>lists[si].length) si=k; });
+  const from=keys[si], to=from===pr.a?pr.b:pr.a, show=lists[si];
+  const Fr=pos[from], To=pos[to], ct=pcContact(Fr,To);
+  const tipHead=`${nm(from)} → ${nm(to)}${keys.length===2?"(両側から入力)":""}${mism?"\n⚠ 両側の建具構成が一致しません":""}\n`;
+  if(ct){
+   const seg=ct.len/show.length;
+   show.forEach((e,j)=>{
+    const cm=ct.lo+seg*(j+0.5), wm=Math.min(Math.max(+e.width||0.8,0.6),seg*0.85);
+    const C=ct.v?[X(ct.at),Y(cm)]:[X(cm),Y(ct.at)], t=ct.v?[0,1]:[1,0], nv=ct.v?[ct.dir,0]:[0,ct.dir];
+    dsvg+=pcDoor(C,t,nv,wm*s,wm>=1.4,mism?"var(--ng)":colOf(e),!!e.noEvac,showLbl?(mism?"⚠":"")+dName(e):"",tipHead+dTip(e));
+   });
+  }else{ // 壁が接していない → 自室側の壁に建具を描き、相手の室へ点線
+   apart.push(`${nm(from)}–${nm(to)}`);
+   const ax=Fr.x+Fr.w/2, ay=Fr.y+Fr.h/2, bx=To.x+To.w/2, by=To.y+To.h/2, dx=bx-ax, dy=by-ay;
+   const hor=Math.abs(dx)/(Fr.w+To.w)>=Math.abs(dy)/(Fr.h+To.h);
+   const sp=Math.max(...show.map(e=>+e.width||0.8))+0.6;
+   show.forEach((e,j)=>{
+    const off=(j-(show.length-1)/2)*sp, cl=(v,lo,hi)=>Math.min(Math.max(v,lo),hi), wm=Math.max(+e.width||0.8,0.6);
+    let C,t,nv,T;
+    if(hor){ const sx=dx>0?Fr.x+Fr.w:Fr.x, yy=cl(cl(by,Fr.y,Fr.y+Fr.h)+off,Fr.y+wm/2,Fr.y+Fr.h-wm/2);
+     C=[X(sx),Y(yy)]; t=[0,1]; nv=[dx>0?1:-1,0]; T=[X(dx>0?To.x:To.x+To.w),Y(cl(yy,To.y,To.y+To.h))]; }
+    else { const sy=dy>0?Fr.y+Fr.h:Fr.y, xx=cl(cl(bx,Fr.x,Fr.x+Fr.w)+off,Fr.x+wm/2,Fr.x+Fr.w-wm/2);
+     C=[X(xx),Y(sy)]; t=[1,0]; nv=[0,dy>0?1:-1]; T=[X(cl(xx,To.x,To.x+To.w)),Y(dy>0?To.y:To.y+To.h)]; }
+    const col=mism?"var(--ng)":colOf(e);
+    links+=`<line x1="${C[0]}" y1="${C[1]}" x2="${T[0]}" y2="${T[1]}" stroke="${col}" stroke-width="1.4" stroke-dasharray="5 4"><title>${esc(tipHead+"(図上で壁が接していません)")}</title></line><circle cx="${T[0]}" cy="${T[1]}" r="3" fill="${col}"/>`;
+    dsvg+=pcDoor(C,t,nv,wm*s,wm>=1.4,col,!!e.noEvac,showLbl?(mism?"⚠":"")+dName(e):"",tipHead+dTip(e)+"\n(図上で壁が接していません。ドラッグで接するように動かすと壁上に描かれます)");
+   });
+  }
+ });
+ /* 地上への出口: 他の室と接していない外周のうち最も長い区間へ */
+ let gsvg="", enclosed=[];
+ D.ground.forEach((list,rid)=>{
+  const R=pos[rid]; if(!R) return;
+  const fr=pcFree(R,D.nodes.filter(n=>n.key!==rid).map(n=>pos[n.key])).sort((a,b)=>b.len-a.len);
+  let sd=fr[0]; if(!sd){ sd={v:false,at:R.y+R.h,lo:R.x,hi:R.x+R.w,len:R.w,n:1}; enclosed.push(nm(rid)); }
+  const seg=sd.len/list.length;
+  list.forEach((e,j)=>{
+   const cm=sd.lo+seg*(j+0.5), wm=Math.min(Math.max(+e.width||0.8,0.6),seg*0.85);
+   const C=sd.v?[X(sd.at),Y(cm)]:[X(cm),Y(sd.at)], t=sd.v?[0,1]:[1,0], nv=sd.v?[sd.n,0]:[0,sd.n];
+   const col=colOf(e), r0=wm*s+4, A0=[C[0]+nv[0]*r0,C[1]+nv[1]*r0], A1=[C[0]+nv[0]*(r0+16),C[1]+nv[1]*(r0+16)];
+   dsvg+=pcDoor(C,t,nv,wm*s,wm>=1.4,col,!!e.noEvac,showLbl?dName(e):"",`${nm(rid)} → 地上\n`+dTip(e));
+   gsvg+=`<line x1="${A0[0]}" y1="${A0[1]}" x2="${A1[0]}" y2="${A1[1]}" stroke="#0a7d43" stroke-width="2" marker-end="url(#pcArw)"/>
+    <text x="${A1[0]+nv[0]*14}" y="${A1[1]+nv[1]*14+(nv[1]?(nv[1]>0?4:0):4)}" text-anchor="${nv[0]>0?"start":nv[0]<0?"end":"middle"}" font-size="10.5" font-weight="700" fill="#0a7d43">地上</text>`;
+  });
+ });
+ const defs=`<defs>
+  <pattern id="pcStV" width="7" height="7" patternUnits="userSpaceOnUse"><rect width="7" height="7" fill="#eef1f4"/><line x1="0.5" y1="0" x2="0.5" y2="7" stroke="#a5b1bd" stroke-width="1"/></pattern>
+  <pattern id="pcStH" width="7" height="7" patternUnits="userSpaceOnUse"><rect width="7" height="7" fill="#eef1f4"/><line x1="0" y1="0.5" x2="7" y2="0.5" stroke="#a5b1bd" stroke-width="1"/></pattern>
+  <marker id="pcArw" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0a7d43"/></marker></defs>`;
+ /* 縮尺バー */
+ const sbm=[1,2,5,10,20,50].find(v=>v*s>=60)||50, sbx=V.PAD, sby=V.H-18;
+ const sbar=`<g><line x1="${sbx}" y1="${sby}" x2="${sbx+sbm*s}" y2="${sby}" stroke="#34404c" stroke-width="2"/><line x1="${sbx}" y1="${sby-4}" x2="${sbx}" y2="${sby+4}" stroke="#34404c"/><line x1="${sbx+sbm*s}" y1="${sby-4}" x2="${sbx+sbm*s}" y2="${sby+4}" stroke="#34404c"/><text x="${sbx+sbm*s+6}" y="${sby+4}" font-size="10.5" fill="var(--sub)">${sbm}m</text></g>`;
+ const svg=`<svg id="pcSvg" xmlns="http://www.w3.org/2000/svg" width="${V.W}" height="${V.H}" viewBox="0 0 ${V.W} ${V.H}" style="overflow:visible;font-family:sans-serif" role="img" aria-label="平面ポンチ絵">${defs}<rect width="${V.W}" height="${V.H}" fill="#fcfcfb"/>${body}${links}${dsvg}${gsvg}${sbar}</svg>`;
+ const notes=[];
+ if(over.length) notes.push(`<div class="warn">⚠ 室が重なっています: ${esc(over.join(" / "))}</div>`);
+ if(apart.length) notes.push(`<div class="small-note">図上で壁が接していない室間の建具(点線): ${esc(apart.join(" / "))} … 室をドラッグして接するように置くと壁上に描かれます。</div>`);
+ if(enclosed.length) notes.push(`<div class="small-note">⚠ 外周がすべて他の室と接しているため、地上への出口を仮に下辺へ描いています: ${esc(enclosed.join(" / "))}</div>`);
+ return {svg,notes:notes.join("")};
+}
+function ponchiDraw(frozen){
+ const box=document.getElementById("pcBox"); if(!box||!PONCHI_CTX) return;
+ const D=ponchiData(PONCHI_CTX), pos=ponchiPos(D), r=ponchiSVG(PONCHI_CTX,D,pos,frozen);
+ if(typeof r==="string"){ box.innerHTML=r; document.getElementById("pcNotes").innerHTML=""; return; }
+ box.innerHTML=r.svg; document.getElementById("pcNotes").innerHTML=r.notes;
+}
+function ponchiHTML(model){
+ PONCHI_CTX=model;
+ const hide=!!(M.ponchi&&M.ponchi.hideLbl);
+ return `<div class="pcBar"><button type="button" onclick="ponchiRelayout()">自動配置し直す</button>
+  <label><input type="checkbox" ${hide?"":"checked"} onchange="M.ponchi=M.ponchi||{};M.ponchi.hideLbl=!this.checked;ponchiDraw(false)"> 建具名を表示</label>
+  <button type="button" onclick="ponchiSaveSVG()">SVG保存</button></div>
+ <div id="pcBox" class="chkGraphBox"></div><div id="pcNotes"></div>
+ <div class="chkLegend"><span><svg width="28" height="12"><line x1="2" y1="10" x2="2" y2="1" stroke="#2a78d6" stroke-width="1.8"/><path d="M2,1 A9 9 0 0 1 11,10" fill="none" stroke="#2a78d6" stroke-dasharray="2 2"/></svg>遮煙2号</span><span><svg width="28" height="12"><line x1="2" y1="10" x2="2" y2="1" stroke="#eb6834" stroke-width="1.8"/><path d="M2,1 A9 9 0 0 1 11,10" fill="none" stroke="#eb6834" stroke-dasharray="2 2"/></svg>1号(常閉/煙連動)</span><span><svg width="28" height="12"><line x1="2" y1="10" x2="2" y2="1" stroke="#56636f" stroke-width="1.8"/><path d="M2,1 A9 9 0 0 1 11,10" fill="none" stroke="#56636f" stroke-dasharray="2 2"/></svg>防火設備なし・その他</span><span><svg width="28" height="10"><line x1="2" y1="5" x2="26" y2="5" stroke="#56636f" stroke-width="2.2" stroke-dasharray="3 2"/></svg>避難時不使用</span><span><svg width="28" height="10"><line x1="2" y1="5" x2="26" y2="5" stroke="#56636f" stroke-width="1.4" stroke-dasharray="5 4"/></svg>壁が接していない室間の建具</span><span>扉の開く向き = 入力した室から避難する向き</span></div>
+ <div class="small-note">室の大きさは床面積どおり(形は仮の矩形)です。室をドラッグで移動(他の室の壁に吸着)、右下の□のドラッグで縦横比を変更、ダブルクリックで90°回転します。配置はJSONに保存されます。建具は2室が接する壁の上に入力順で等間隔に並べ、幅は有効幅Bの縮尺です。</div>`;
+}
+function ponchiRelayout(){
+ if(M.ponchi&&M.ponchi.pos&&Object.keys(M.ponchi.pos).length&&!confirm("ドラッグで調整した配置を破棄して自動配置し直しますか?")) return;
+ M.ponchi=M.ponchi||{}; M.ponchi.pos={}; ponchiDraw(false);
+}
+function ponchiSaveSVG(){
+ const svg=document.getElementById("pcSvg"); if(!svg) return;
+ const txt=svg.outerHTML.replace(/var\(--ink\)/g,"#1a2430").replace(/var\(--sub\)/g,"#5a6b7b").replace(/var\(--ng\)/g,"#c0392b");
+ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([txt],{type:"image/svg+xml"}));
+ a.download="ponchi_"+(M.floorName||"floor")+".svg"; a.click();
+}
+function pcSnapAxis(lo,len,edges,thr,grid){ // 左端(上端)loを他の室の壁へ吸着、なければグリッドへ
+ let best=null,bd=thr;
+ edges.forEach(e=>{ [[lo,0],[lo+len,len]].forEach(([v,off])=>{ const d=Math.abs(v-e); if(d<bd){bd=d;best=e-off;} }); });
+ return best!=null?best:Math.round(lo/grid)*grid;
+}
+function ponchiBind(){
+ const box=document.getElementById("pcBox"); if(!box) return;
+ box.style.touchAction="none";
+ box.onpointerdown=ev=>{
+  const g=ev.target.closest("[data-pk]"); if(!g||!M.ponchi||!M.ponchi.pos[g.dataset.pk]) return;
+  PONCHI_DRAG={key:g.dataset.pk,act:ev.target.dataset.act||"move",sx:ev.clientX,sy:ev.clientY,o:Object.assign({},M.ponchi.pos[g.dataset.pk]),moved:false};
+  box.setPointerCapture(ev.pointerId); ev.preventDefault();
+ };
+ box.onpointermove=ev=>{
+  const d=PONCHI_DRAG; if(!d||!PONCHI_VIEW) return;
+  if(!d.moved&&Math.hypot(ev.clientX-d.sx,ev.clientY-d.sy)<3) return;
+  d.moved=true;
+  const s=PONCHI_VIEW.s, dx=(ev.clientX-d.sx)/s, dy=(ev.clientY-d.sy)/s, thr=8/s;
+  const pos=M.ponchi.pos, p=pos[d.key];
+  const others=Object.keys(pos).filter(k=>k!==d.key&&PONCHI_CTX&&(roomById(PONCHI_CTX,k)||(k.startsWith("s:")&&(PONCHI_CTX.stairs||[]).some(st=>"s:"+st.id===k)))).map(k=>pos[k]);
+  const xe=others.flatMap(o=>[o.x,o.x+o.w]), ye=others.flatMap(o=>[o.y,o.y+o.h]);
+  if(d.act==="resize"){
+   const A=d.o.w*d.o.h, R=pcSnapAxis(d.o.x+Math.max(0.8,d.o.w+dx),0,xe,thr,0.1);
+   p.w=+Math.max(0.8,R-d.o.x).toFixed(3); p.h=+(A/p.w).toFixed(3);
+  }else{
+   p.x=+pcSnapAxis(d.o.x+dx,p.w,xe,thr,0.5).toFixed(3); p.y=+pcSnapAxis(d.o.y+dy,p.h,ye,thr,0.5).toFixed(3);
+  }
+  ponchiDraw(true);
+ };
+ box.onpointerup=box.onpointercancel=()=>{ const d=PONCHI_DRAG; PONCHI_DRAG=null; if(d&&d.moved) ponchiDraw(false); };
+ box.ondblclick=ev=>{
+  const g=ev.target.closest("[data-pk]"); if(!g) return; const p=M.ponchi.pos[g.dataset.pk]; if(!p) return;
+  const cx=p.x+p.w/2, cy=p.y+p.h/2; [p.w,p.h]=[p.h,p.w]; p.x=+(cx-p.w/2).toFixed(3); p.y=+(cy-p.h/2).toFixed(3);
+  ponchiDraw(false);
+ };
+}
 /* ---------- 4. 時間の内訳グラフ ---------- */
 function chkBarRow(name,seg,ts,scale,jump,sub,tsLabel){
  const pct=v=>Math.max(0,Math.min(100,v/scale*100));
@@ -2157,6 +2440,7 @@ function renderCheck(){
  document.getElementById("chkGraph").innerHTML=chkGraphSVG(model,F);
  document.getElementById("chkTime").innerHTML=chkTimeHTML(model,calc);
  document.getElementById("chkMatrix").innerHTML=chkMatrixHTML(model,calc,F);
+ document.getElementById("chkPonchi").innerHTML=ponchiHTML(model); ponchiDraw(false); ponchiBind();
 }
 function chkFlash(el){ if(!el)return; el.scrollIntoView({block:"center",behavior:"smooth"}); el.classList.remove("chkFlash"); void el.offsetWidth; el.classList.add("chkFlash"); }
 function chkGo(type,i,field){
