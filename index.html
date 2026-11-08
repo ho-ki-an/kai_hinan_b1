@@ -20,7 +20,7 @@ body.pcWide main{max-width:min(1800px,100%)} /* ポンチ絵タブだけ横に�
 .f{display:flex;flex-direction:column;gap:2px}
 .f label{font-size:11.5px;color:var(--sub)}
 .f input,.f select{padding:5px 7px;border:1px solid var(--line);border-radius:5px;font-size:13.5px;background:#fff;min-width:70px}
-.f input[type=number]{width:110px}
+.f input[data-num]{width:110px}
 .f input.wide{width:180px}
 button{cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:6px;padding:7px 13px;font-size:13.5px}
 .tabs{display:flex;gap:4px;margin:14px 0 0;border-bottom:2px solid var(--acc);flex-wrap:wrap}
@@ -139,7 +139,7 @@ tr.noEvacRow>td{background:#fbf1e3}
 #pane-walk button.hk-danger{border-color:var(--hk-max);color:var(--hk-max)}
 #pane-walk input[type=file]{font-size:13px;max-width:230px}
 #pane-walk input[type=range]{width:150px;vertical-align:middle}
-#pane-walk input[type=number]{font-family:var(--hk-mono);font-size:13px;width:90px;padding:5px 8px;border:1px solid var(--line);border-radius:6px}
+#pane-walk input[data-num]{font-family:var(--hk-mono);font-size:13px;width:90px;padding:5px 8px;border:1px solid var(--line);border-radius:6px}
 #pane-walk .hk-status{font-size:13px;padding:8px 12px;border-radius:6px;background:#eef0ee;color:var(--sub);margin-top:12px}
 #pane-walk .hk-status.ok{background:#e5f2ea;color:var(--hk-ok)}
 #pane-walk .hk-status.warn{background:#f7ecd9;color:var(--hk-warn)}
@@ -194,7 +194,7 @@ tr.noEvacRow>td{background:#fbf1e3}
 .pcMenu{position:absolute;z-index:20;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.15);padding:10px 30px 8px 12px;font-size:13px;min-width:240px;max-width:420px}
 .pcMenu .pcMt{font-weight:700;margin-bottom:6px}
 .pcMenu .pcMr{margin:5px 0;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.pcMenu input[type=text]{width:100%}
+.pcMenu input[type=text]:not([data-num]){width:100%}
 .pcMenu .pcX{position:absolute;right:4px;top:4px;border:none;background:none;font-size:16px;cursor:pointer;padding:2px 6px}
 .pcSep{width:1px;height:20px;background:var(--line)}
 .pcUlBar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:-2px 0 8px;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:#f7f9fb;font-size:13px}
@@ -562,7 +562,7 @@ tr.noEvacRow>td{background:#fbf1e3}
  <div class="hk-row" id="hk_row2" style="display:none;">
   <span style="font-size:13px;">実距離の分かる2点を順にクリック →</span>
   <label>実距離</label>
-  <input type="number" id="hk_realDist" step="0.1" min="0" placeholder="例: 10.0">
+  <input type="text" inputmode="decimal" autocomplete="off" data-num id="hk_realDist" step="0.1" min="0" placeholder="例: 10.0">
   <label>m</label>
   <button id="hk_btnApplyScale" class="primary">換算を適用</button>
   <span id="hk_scaleInfo" style="font-size:12px;font-family:var(--hk-mono);color:var(--sub);"></span>
@@ -1170,10 +1170,10 @@ function renderDoors(){
    <td class="dragH" title="ドラッグして並べ替え" onmousedown="this.parentNode.draggable=true" onmouseup="this.parentNode.draggable=false">⠿</td>
    <td class="chkCol"><input type="checkbox" ${d.chk?"checked":""} title="図面と照合済みの印(計算・計算書には影響しません)" onchange="M.doors[${i}].chk=this.checked;renderDoors()"></td>
    <td class="nmCol"><input value="${d.name}" oninput="M.doors[${i}].name=this.value"></td>
-   <td><input type="number" step="0.05" value="${d.width}" oninput="M.doors[${i}].width=num(this.value)"></td>
-   <td><input type="number" step="0.05" value="${d.rawW}" placeholder="=B" oninput="M.doors[${i}].rawW=this.value"></td>
-   <td><input type="number" step="0.05" value="${d.topH}" oninput="M.doors[${i}].topH=num(this.value)"></td>
-   <td><input type="number" step="0.05" value="${d.botH??""}" placeholder="0" title="窓・欄間等の開口部の床面からの下端高さ。扉は空欄(0)" oninput="M.doors[${i}].botH=this.value"></td>
+   <td><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.05" value="${d.width}" oninput="M.doors[${i}].width=num(this.value)"></td>
+   <td><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.05" value="${d.rawW}" placeholder="=B" oninput="M.doors[${i}].rawW=this.value"></td>
+   <td><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.05" value="${d.topH}" oninput="M.doors[${i}].topH=num(this.value)"></td>
+   <td><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.05" value="${d.botH??""}" placeholder="0" title="窓・欄間等の開口部の床面からの下端高さ。扉は空欄(0)" oninput="M.doors[${i}].botH=this.value"></td>
    <td style="text-align:center"><input type="checkbox" ${d.noEvac?"checked":""} title="防火シャッター等、開口部としては存在するが避難時に通行できない建具" onchange="M.doors[${i}].noEvac=this.checked;renderDoors();renderRooms()"></td>
    <td><select onchange="M.doors[${i}].cls=this.value">${Object.entries(DOOR).filter(([k,x])=>!x.hidden||d.cls===k).map(([k,x])=>`<option value="${k}" ${d.cls===k?"selected":""}>${x.label}</option>`).join("")}</select></td>
    <td class="small-note">${doorUsedRooms(d).join("、")||"未使用"}</td>
@@ -1313,6 +1313,14 @@ function addOpening(ri){ // 2つ目以降は直前のコピー
 }
 function delOpening(ri,oi){ M.rooms[ri].smoke.openings.splice(oi,1); renderRooms(); }
 function setV(obj,key,val){ obj[key]=val; }
+/* 数値欄(data-num): IMEがオンでも全角の数字・記号を半角に直す(入力確定時・入力中の非変換時・変更時) */
+function toHalfNum(s){ return String(s).replace(/[０-９．＋，ｅＥ]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/[－ー−‐―]/g,"-").replace(/[。]/g,".").replace(/[\s　]/g,""); }
+function numFix(t,fire){ if(!t||!t.matches||!t.matches("input[data-num]")) return; const v=t.value, h=toHalfNum(v); if(h===v) return;
+ const c=t.selectionStart; t.value=h; try{ if(c!=null){ const k=Math.max(0,c-(v.length-h.length)); t.setSelectionRange(k,k); } }catch(_){}
+ if(fire) t.dispatchEvent(new Event("input",{bubbles:true})); }
+document.addEventListener("input",e=>{ if(!e.isComposing) numFix(e.target,false); },true); // 各欄のoninputより先に直す
+document.addEventListener("compositionend",e=>numFix(e.target,true),true);
+document.addEventListener("change",e=>numFix(e.target,false),true);
 function num(v){ const n=parseFloat(v); return isNaN(n)?"":n; }
 
 function renderStairs(){
@@ -1321,10 +1329,10 @@ function renderStairs(){
  M.stairs.forEach((s,i)=>{
   h+=`<tr>
    <td><input value="${s.name}" oninput="M.stairs[${i}].name=this.value;renderRooms()"></td>
-   <td><input type="number" step="0.05" value="${s.width}" oninput="M.stairs[${i}].width=num(this.value)"></td>
-   <td><input type="number" step="0.05" value="${s.groundW}" oninput="M.stairs[${i}].groundW=num(this.value)"></td>
-   <td><input type="number" step="0.1" value="${s.ast}" oninput="M.stairs[${i}].ast=num(this.value)"></td>
-   <td><input type="number" step="1" value="${s.aloadOverride}" oninput="M.stairs[${i}].aloadOverride=this.value"></td>
+   <td><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.05" value="${s.width}" oninput="M.stairs[${i}].width=num(this.value)"></td>
+   <td><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.05" value="${s.groundW}" oninput="M.stairs[${i}].groundW=num(this.value)"></td>
+   <td><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.1" value="${s.ast}" oninput="M.stairs[${i}].ast=num(this.value)"></td>
+   <td><input type="text" inputmode="decimal" autocomplete="off" data-num step="1" value="${s.aloadOverride}" oninput="M.stairs[${i}].aloadOverride=this.value"></td>
    <td><button class="small danger" onclick="delStair(${i})">削除</button></td></tr>`;
  });
  t.innerHTML=h;
@@ -1360,10 +1368,10 @@ function annexBox(r,i){
      : `<input value="${esc(it.name)}" placeholder="例: 更衣室" oninput="M.rooms[${i}].annex.items[${ai}].name=this.value">`}</td>
    <td>${isRef
      ? `<span class="small-note">${src?fmt(src.area):"—"}</span>`
-     : `<input type="number" step="0.01" style="width:90px" value="${it.area}" oninput="M.rooms[${i}].annex.items[${ai}].area=num(this.value)">`}</td>
+     : `<input type="text" inputmode="decimal" autocomplete="off" data-num step="0.01" style="width:90px" value="${it.area}" oninput="M.rooms[${i}].annex.items[${ai}].area=num(this.value)">`}</td>
    <td>${isRef
      ? `<span class="small-note">${src?src.p:"—"}</span>`
-     : `<input type="number" step="0.001" style="width:80px" value="${it.p}" oninput="M.rooms[${i}].annex.items[${ai}].p=num(this.value)">`}</td>
+     : `<input type="text" inputmode="decimal" autocomplete="off" data-num step="0.001" style="width:80px" value="${it.p}" oninput="M.rooms[${i}].annex.items[${ai}].p=num(this.value)">`}</td>
    <td class="small-note">${isRef?"参照先が室カードとして計上済<br>(階の合計へは再加算しません)":"階の床面積・在館者にも加算"}</td>
    <td><button class="small danger" onclick="delAnnex(${i},${ai})">×</button></td></tr>`;
  }).join("");
@@ -1402,10 +1410,10 @@ function renderRooms(){
     <td><button class="small danger" onclick="delExit(${i},${ei})">×</button></td></tr>`;}).join("");
   const sm=r.smoke||{type:"none",openings:[]};
   let opRows=(sm.openings||[]).map((o,oi)=>`<tr>
-    <td><input type="number" step="0.05" value="${o.w}" oninput="M.rooms[${i}].smoke.openings[${oi}].w=num(this.value)"></td>
-    <td><input type="number" step="0.05" value="${o.hb}" oninput="M.rooms[${i}].smoke.openings[${oi}].hb=num(this.value)"></td>
-    <td><input type="number" step="0.05" value="${o.ht}" oninput="M.rooms[${i}].smoke.openings[${oi}].ht=num(this.value)"></td>
-    <td><input type="number" step="1" value="${o.cap}" placeholder="機械排煙のみ" oninput="M.rooms[${i}].smoke.openings[${oi}].cap=this.value"></td>
+    <td><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.05" value="${o.w}" oninput="M.rooms[${i}].smoke.openings[${oi}].w=num(this.value)"></td>
+    <td><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.05" value="${o.hb}" oninput="M.rooms[${i}].smoke.openings[${oi}].hb=num(this.value)"></td>
+    <td><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.05" value="${o.ht}" oninput="M.rooms[${i}].smoke.openings[${oi}].ht=num(this.value)"></td>
+    <td><input type="text" inputmode="decimal" autocomplete="off" data-num step="1" value="${o.cap}" placeholder="機械排煙のみ" oninput="M.rooms[${i}].smoke.openings[${oi}].cap=this.value"></td>
     <td><input value="${esc(o.grp??"")}" placeholder="空欄=共通" style="width:90px" oninput="M.rooms[${i}].smoke.openings[${oi}].grp=this.value"></td>
     <td><button class="small danger" onclick="delOpening(${i},${oi})">×</button></td></tr>`).join("");
   h+=`<div class="roomCard ${r._fold?"folded":""}" ${r._fold?`draggable="true"`:""} ondragstart="dragRoom(event,${i})" ondragover="dragOverRoom(event)" ondrop="dropRoom(event,${i})" ondragleave="dragLeaveRoom(event)" ondragend="dragEndRoom(event)" onmousedown="ROOM_MD=event.target.tagName">
@@ -1419,17 +1427,17 @@ function renderRooms(){
     <div class="f"><label>居室避難の検証対象</label><select onchange="M.rooms[${i}].verify=this.value==='1'"><option value="1" ${r.verify?"selected":""}>対象</option><option value="0" ${!r.verify?"selected":""}>対象外(廊下等)</option></select></div>
     <div class="f"><label>火災室として検証<br><span class="small-note">(平12建告1440号該当室は除外可)</span></label><select onchange="M.rooms[${i}].fireExempt=this.value==='1'"><option value="0" ${!r.fireExempt?"selected":""}>対象</option><option value="1" ${r.fireExempt?"selected":""}>対象外(火災の発生のおそれの少ない室)</option></select></div>
     ${r.fireExempt?`<div class="f"><label>階避難開始時間のΣAarea<br><span class="small-note">(質疑24)</span></label><select title="火災の発生のおそれの少ない室で、かつ廊下・階段等の通路・便所等(避難者が存在し得る部分)以外のものは、階避難開始時間の床面積から除外できます" onchange="M.rooms[${i}].excludeFloorArea=this.value==='1'"><option value="0" ${!r.excludeFloorArea?"selected":""}>算入する</option><option value="1" ${r.excludeFloorArea?"selected":""}>除外する(廊下・便所等以外)</option></select></div>`:""}
-    <div class="f"><label>床面積 A [m²]</label><input type="number" step="0.01" value="${r.area}" oninput="M.rooms[${i}].area=num(this.value)"></div>
-    <div class="f"><label>平均天井高 Hroom [m]<br><span class="small-note">(基準点=床最高位から)</span></label><input type="number" step="0.05" value="${r.Hroom}" oninput="M.rooms[${i}].Hroom=num(this.value)"></div>
-    <div class="f"><label>Hlow [m](空欄=Hroom)<br><span class="small-note">(床最低位からの平均)</span></label><input type="number" step="0.05" value="${r.Hlow}" oninput="M.rooms[${i}].Hlow=this.value"></div>
-    <div class="f"><label>Htop [m](空欄=Hroom)<br><span class="small-note">(天井高さの最大)</span></label><input type="number" step="0.05" value="${r.Htop}" oninput="M.rooms[${i}].Htop=this.value"></div>
-    <div class="f"><label>在館者密度 p [人/m²]</label><input type="number" step="0.001" value="${r.p??""}" oninput="M.rooms[${i}].p=num(this.value)"></div>
-    <div class="f"><label>積載可燃物発熱量 ql [MJ/m²]</label><input type="number" step="1" value="${r.ql}" oninput="M.rooms[${i}].ql=num(this.value)"></div>
-    <div class="f"><label>歩行速度 v [m/分]</label><input type="number" step="1" value="${r.walkV}" oninput="M.rooms[${i}].walkV=num(this.value)"></div>
+    <div class="f"><label>床面積 A [m²]</label><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.01" value="${r.area}" oninput="M.rooms[${i}].area=num(this.value)"></div>
+    <div class="f"><label>平均天井高 Hroom [m]<br><span class="small-note">(基準点=床最高位から)</span></label><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.05" value="${r.Hroom}" oninput="M.rooms[${i}].Hroom=num(this.value)"></div>
+    <div class="f"><label>Hlow [m](空欄=Hroom)<br><span class="small-note">(床最低位からの平均)</span></label><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.05" value="${r.Hlow}" oninput="M.rooms[${i}].Hlow=this.value"></div>
+    <div class="f"><label>Htop [m](空欄=Hroom)<br><span class="small-note">(天井高さの最大)</span></label><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.05" value="${r.Htop}" oninput="M.rooms[${i}].Htop=this.value"></div>
+    <div class="f"><label>在館者密度 p [人/m²]</label><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.001" value="${r.p??""}" oninput="M.rooms[${i}].p=num(this.value)"></div>
+    <div class="f"><label>積載可燃物発熱量 ql [MJ/m²]</label><input type="text" inputmode="decimal" autocomplete="off" data-num step="1" value="${r.ql}" oninput="M.rooms[${i}].ql=num(this.value)"></div>
+    <div class="f"><label>歩行速度 v [m/分]</label><input type="text" inputmode="decimal" autocomplete="off" data-num step="1" value="${r.walkV}" oninput="M.rooms[${i}].walkV=num(this.value)"></div>
     <div class="f"><label>内装仕上(壁1.2m超+天井)</label><select onchange="M.rooms[${i}].interior=this.value">${intOpts}</select></div>
-    <div class="f"><label>居室出口までの歩行距離 max [m]</label><input type="number" step="0.1" value="${r.lRoomExit}" oninput="M.rooms[${i}].lRoomExit=num(this.value)"></div>
-    <div class="f"><label>直通階段出口までの歩行距離 max [m]</label><input type="number" step="0.1" value="${r.lStair}" oninput="M.rooms[${i}].lStair=num(this.value)"></div>
-    <div class="f"><label>同左(火災室で最大幅出口除外時)[m]<br><span class="small-note">空欄=同じ値</span></label><input type="number" step="0.1" value="${r.lStairAlt}" oninput="M.rooms[${i}].lStairAlt=this.value"></div>
+    <div class="f"><label>居室出口までの歩行距離 max [m]</label><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.1" value="${r.lRoomExit}" oninput="M.rooms[${i}].lRoomExit=num(this.value)"></div>
+    <div class="f"><label>直通階段出口までの歩行距離 max [m]</label><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.1" value="${r.lStair}" oninput="M.rooms[${i}].lStair=num(this.value)"></div>
+    <div class="f"><label>同左(火災室で最大幅出口除外時)[m]<br><span class="small-note">空欄=同じ値</span></label><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.1" value="${r.lStairAlt}" oninput="M.rooms[${i}].lStairAlt=this.value"></div>
    </div>
    ${annexBox(r,i)}
    <h3>出口(${(r.exits||[]).length})</h3>
@@ -1446,10 +1454,10 @@ function renderRooms(){
     ${sm.type!=="none"?`
     <div class="f"><label>防煙垂れ壁区画(1500m²以内)</label><select onchange="M.rooms[${i}].smoke.zoned=this.value==='1';renderRooms()"><option value="0" ${!sm.zoned?"selected":""}>なし(室全体)</option><option value="1" ${sm.zoned?"selected":""}>あり(最不利区画で入力)</option></select></div>
     ${sm.zoned?`
-    <div class="f"><label>垂れ壁下端高さ Hw [m]</label><input type="number" step="0.05" value="${sm.tarekabeH}" oninput="M.rooms[${i}].smoke.tarekabeH=this.value"></div>
-    <div class="f"><label>当該防煙区画面積 Asc [m²]</label><input type="number" step="0.1" value="${sm.Asc}" oninput="M.rooms[${i}].smoke.Asc=this.value"></div>`:""}
-    ${sm.type==="natural"?`<div class="f"><label>給気口面積 ΣAa [m²]<br><span class="small-note">床面1.8m以下・連動/常時開放</span></label><input type="number" step="0.01" value="${sm.Aa}" oninput="M.rooms[${i}].smoke.Aa=this.value"></div>`:""}
-    ${sm.type==="special"?`<div class="f"><label>送風機排出能力 s [m³/分]</label><input type="number" step="1" value="${sm.s}" oninput="M.rooms[${i}].smoke.s=this.value"></div>`:""}
+    <div class="f"><label>垂れ壁下端高さ Hw [m]</label><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.05" value="${sm.tarekabeH}" oninput="M.rooms[${i}].smoke.tarekabeH=this.value"></div>
+    <div class="f"><label>当該防煙区画面積 Asc [m²]</label><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.1" value="${sm.Asc}" oninput="M.rooms[${i}].smoke.Asc=this.value"></div>`:""}
+    ${sm.type==="natural"?`<div class="f"><label>給気口面積 ΣAa [m²]<br><span class="small-note">床面1.8m以下・連動/常時開放</span></label><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.01" value="${sm.Aa}" oninput="M.rooms[${i}].smoke.Aa=this.value"></div>`:""}
+    ${sm.type==="special"?`<div class="f"><label>送風機排出能力 s [m³/分]</label><input type="text" inputmode="decimal" autocomplete="off" data-num step="1" value="${sm.s}" oninput="M.rooms[${i}].smoke.s=this.value"></div>`:""}
     `:""}
    </div>
    ${sm.type!=="none"?`
@@ -1806,6 +1814,16 @@ function chkCollect(model,calc){
  };
  const rooms=model.rooms, doors=M.doors||[], stairs=model.stairs||[];
  const R=i=>({type:"room",i}), D=i=>({type:"door",i}), S=i=>({type:"stair",i}), B={type:"base"};
+ /* --- 図上で地上への出口の外にわずかなすき間で室がある(5cm〜0.3m) --- */
+ if(model===M&&M.ponchi&&M.ponchi.pos) rooms.forEach((r,i)=>(r.exits||[]).forEach(e=>{ if(e.to.type!=="ground"||!e.pcSide||e.pcT==null) return;
+  const pos=M.ponchi.pos, Rs=pcRectsOf(r.id,pos), Rr=Rs[e.pcSeg&&e.pcSeg[r.id]!=null?e.pcSeg[r.id]:0]; if(!Rr) return;
+  const S=pcSide(Rr,e.pcSide), c=S.lo+S.len*e.pcT, d0=doors.find(d=>d.id===e.doorType);
+  [...rooms.filter(o=>o!==r).map(o=>[o.name||"(無名)",o.id]),...stairs.map(st=>[st.name||"階段","s:"+st.id])].some(([onm,k])=>pcRectsOf(k,pos).some(Q=>{
+   const gap=S.v?(S.n>0?Q.x-S.at:S.at-(Q.x+Q.w)):(S.n>0?Q.y-S.at:S.at-(Q.y+Q.h)), lo=S.v?Q.y:Q.x, hi=S.v?Q.y+Q.h:Q.x+Q.w;
+   if(!(gap>-1e-9&&gap<PC_SNAP&&c>lo&&c<hi)) return false;
+   const dn=d0?d0.name:"建具";
+   put("warn",R(i),gap<PC_TOUCH? `「${r.name||"(無名)"}」の地上への出口(${dn})が、⓪ポンチ絵で「${onm}」と接している壁にあります(外壁でないため図では別の外壁に表示しています。「${onm}」への出口なら接続先を直してください)`
+    : `「${r.name||"(無名)"}」の地上への出口(${dn})のすぐ外 ${Math.round(gap*100)}cm に「${onm}」があります。⓪ポンチ絵で壁がわずかに離れているため外壁と判定されています(「${onm}」への出口なら、室を接するように動かして接続先を直してください)`); return true; })); }));
  /* --- 階全体 --- */
  if(!rooms.length) put("err",B,"室が1つも入力されていません");
  const anyGround=rooms.some(r=>(r.exits||[]).some(e=>e.to.type==="ground"));
@@ -2122,6 +2140,7 @@ function pcShapes(n,deg){ // 候補の縦横比(w/h)。廊下は接続数に応�
  else if(n.room.kind==="corridor"){ const q=Math.min(10,Math.max(3,deg+1)); qs=[q,1/q]; }
  return qs.map(q=>{const w=Math.sqrt(n.A*q);return {w,h:n.A/w};});
 }
+const PC_SNAP=0.3, PC_TOUCH=0.05; // 室の壁への吸着距離[m](画面上8pxの方が長ければそちら) / これ未満のすき間は「接している」とみなす
 function pcOverlap(a,b){ return Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x)>1e-3 && Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y)>1e-3; }
 /* 棒状の廊下: M.ponchi.bars[室key]={w:幅[m],segs:[{x1,y1,x2,y2}…]}(中心線・縦横のみ)。各棒=中心線を幅/2ずつ太らせた矩形(端も幅/2伸ばし、L字の角が埋まる) */
 function pcBars(k){ const b=M.ponchi&&M.ponchi.bars&&M.ponchi.bars[k]; return b&&b.segs&&b.segs.length?b:null; }
@@ -2167,14 +2186,14 @@ function pcContact(a,b,hint){ // aとbが共有する壁(dir: aから見たbの�
   const S=pcSide(I,sd);
   return {v:S.v,at:S.at,lo:S.lo,hi:S.lo+S.len,len:S.len,dir:ia?S.n:-S.n,cont:true,side:sd};
  }
- const e=0.02, lx=Math.max(a.x,b.x), hx=Math.min(a.x+a.w,b.x+b.w), ly=Math.max(a.y,b.y), hy=Math.min(a.y+a.h,b.y+b.h);
+ const e=0.02, g=PC_TOUCH, lx=Math.max(a.x,b.x), hx=Math.min(a.x+a.w,b.x+b.w), ly=Math.max(a.y,b.y), hy=Math.min(a.y+a.h,b.y+b.h); // 5cm未満のすき間は接している
  if(hy-ly>e){
-  if(Math.abs(a.x+a.w-b.x)<e) return {v:true,at:b.x,lo:ly,hi:hy,len:hy-ly,dir:1};
-  if(Math.abs(b.x+b.w-a.x)<e) return {v:true,at:a.x,lo:ly,hi:hy,len:hy-ly,dir:-1};
+  if(Math.abs(a.x+a.w-b.x)<g) return {v:true,at:b.x,lo:ly,hi:hy,len:hy-ly,dir:1};
+  if(Math.abs(b.x+b.w-a.x)<g) return {v:true,at:a.x,lo:ly,hi:hy,len:hy-ly,dir:-1};
  }
  if(hx-lx>e){
-  if(Math.abs(a.y+a.h-b.y)<e) return {v:false,at:b.y,lo:lx,hi:hx,len:hx-lx,dir:1};
-  if(Math.abs(b.y+b.h-a.y)<e) return {v:false,at:a.y,lo:lx,hi:hx,len:hx-lx,dir:-1};
+  if(Math.abs(a.y+a.h-b.y)<g) return {v:false,at:b.y,lo:lx,hi:hx,len:hx-lx,dir:1};
+  if(Math.abs(b.y+b.h-a.y)<g) return {v:false,at:a.y,lo:lx,hi:hx,len:hx-lx,dir:-1};
  }
  return null;
 }
@@ -2241,7 +2260,20 @@ function pcFitArea(D,pos){ // 外側の室は内側の室を含めた合計面�
  const T=pcTree(D,pos), old={};
  D.nodes.forEach(n=>{ if(pos[n.key]) old[n.key]=Object.assign({},pos[n.key]); });
  const gross=k=>D.byKey[k].A+(T.kids[k]||[]).reduce((s,c)=>s+gross(c),0);
- D.nodes.forEach(n=>{ const p=pos[n.key], A=p&&gross(n.key); if(p&&!pcBars(n.key)&&Math.abs(p.w*p.h-A)>A*0.005){ const q=p.w/p.h; p.w=+Math.sqrt(A*q).toFixed(3); p.h=+(A/p.w).toFixed(3); } });
+ const fit=[];
+ D.nodes.forEach(n=>{ const p=pos[n.key], A=p&&gross(n.key); if(p&&!pcBars(n.key)&&Math.abs(p.w*p.h-A)>A*0.005){ const q=p.w/p.h; p.w=+Math.sqrt(A*q).toFixed(3); p.h=+(A/p.w).toFixed(3); fit.push([n.key,A]); } });
+ fit.forEach(([k,A])=>{ // 面積に合わせて大きさを変えた室: 右・下の辺を近く(0.3m以内)の壁に揃える。1辺は面積を保って揃え、2辺目は面積の変化が2%以内なら揃えて図上の面積に反映
+  const p=pos[k], skip=new Set([k,...pcDesc(T,k),...pcAnc(T,k)]), O=D.nodes.filter(n=>!skip.has(n.key)).flatMap(n=>pcRectsOf(n.key,pos));
+  const XE=O.flatMap(o=>[o.x,o.x+o.w]), YE=O.flatMap(o=>[o.y,o.y+o.h]);
+  const near=(v,es)=>{ let b=null,bd=PC_SNAP; es.forEach(e=>{ const d=Math.abs(e-v); if(d<bd){ bd=d; b=e; } }); return b; };
+  const tryO=first=>{ let w=p.w, h=p.h, n=0;
+   const sx=()=>{ const e=near(p.x+w,XE); return e!=null&&e-p.x>0.8?e-p.x:null; }, sy=()=>{ const e=near(p.y+h,YE); return e!=null&&e-p.y>0.8?e-p.y:null; };
+   if(first==="x"){ const v=sx(); if(v!=null){ w=v; h=A/w; n++; } const u=sy(); if(u!=null&&Math.abs(w*u-A)<=A*0.02){ h=u; n++; } }
+   else { const u=sy(); if(u!=null){ h=u; w=A/h; n++; } const v=sx(); if(v!=null&&Math.abs(v*h-A)<=A*0.02){ w=v; n++; } }
+   return {w,h,n,dA:Math.abs(w*h-A)}; };
+  const c=[tryO("x"),tryO("y")].sort((a,b)=>b.n-a.n||a.dA-b.dA)[0]; if(!c.n) return;
+  p.w=+c.w.toFixed(3); p.h=+c.h.toFixed(3);
+  if(c.dA>A*0.001){ const ka=(T.kids[k]||[]).reduce((s,q)=>s+pos[q].w*pos[q].h,0); M.ponchi.area[k]=+Math.max(1,p.w*p.h-ka).toFixed(2); D.byKey[k].A=M.ponchi.area[k]; } });
  D.nodes.forEach(n=>{ if(pos[n.key]&&!T.par[n.key]&&T.kids[n.key]) pcKidsFollow(T,pos,n.key,old[n.key],old); });
 }
 function pcFree(R,others,anc,same){ // Rの外周のうち他の矩形と接していない区間(anc: Rを内側に含む室。その壁に重なる辺だけが外周。same: 同じ棒の廊下の他の棒)
@@ -2257,7 +2289,7 @@ function pcFree(R,others,anc,same){ // Rの外周のうち他の矩形と接し�
   others.forEach(O=>{
    const oAt=pcNest(O,R)? (sd.v?(sd.n>0?O.x+O.w:O.x):(sd.n>0?O.y+O.h:O.y)) // 内側の室が壁に寄っている区間はその室の外壁
     : sd.v?(sd.n>0?O.x:O.x+O.w):(sd.n>0?O.y:O.y+O.h);
-   if(Math.abs(oAt-sd.at)>e) return;
+   if(Math.abs(oAt-sd.at)>=PC_TOUCH) return; // 5cm未満のすき間で向き合う区間も外周でない
    const a=sd.v?O.y:O.x, b=sd.v?O.y+O.h:O.x+O.w;
    iv=iv.flatMap(([l,h])=>{ if(b<=l||a>=h) return [[l,h]]; const r=[]; if(a>l) r.push([l,a]); if(b<h) r.push([b,h]); return r; });
   });
@@ -2517,7 +2549,7 @@ function pcInspChkRefresh(){ // 入力中の欄は作り直さず、指摘一覧
  const box=el.querySelector(".pcIchk"), ty=S.t, html=pcInspChkHTML(ty,S.i);
  if(box){ if(html) box.outerHTML=html; else box.remove(); }
  if(ty!=="room") return; const hl=PC_CHK&&PC_CHK.cell[S.i]||{};
- el.querySelectorAll('input[type=number]').forEach(inp=>{ const m=(inp.getAttribute("onchange")||"").match(/'room','[^']*','(\w+)'/), c=m&&hl[m[1]];
+ el.querySelectorAll('input[data-num]').forEach(inp=>{ const m=(inp.getAttribute("onchange")||"").match(/'room','[^']*','(\w+)'/), c=m&&hl[m[1]];
   inp.style.border=c?`2px solid ${PC_CHKCOL[c.lv]}`:""; if(c) inp.title=c.msg; else inp.removeAttribute("title"); });
 }
 /* 付属する居室(当該居室を通らなければ避難できない部分): 入力欄で有/無・一覧、「図で選ぶ」で室をクリックして追加/解除 */
@@ -2528,7 +2560,7 @@ function pcAnnexHTML(r){
  const rows=items.map(it=>{ const k=`'${rid}','${it.id}'`;
   if(it.mode==="ref"){ const s=M.rooms.find(x=>x.id===it.ref);
    return `<div class="pcIex" style="grid-template-columns:minmax(0,1fr) auto"><span>${s?`<a href="javascript:void 0" onclick="pcSelect({t:'room',k:'${s.id}'})">${esc(s.name)}</a> <span class="small-note">${fmt(+s.area||0)}m²・p=${s.p}</span>`:'<span class="warn">⚠ 参照先の室がありません</span>'}</span><button type="button" class="small danger" title="付属する居室から外す" onclick="pcAnnexDel(${k})">×</button></div>`; }
-  return `<div class="pcIex" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,.8fr) auto"><input value="${escA(it.name)}" placeholder="名称(例: 更衣室)" title="名称(室カードを作らない手入力)" onchange="pcAnnexSet(${k},'name',this.value,0)"><input type="number" step="0.01" value="${escA(it.area)}" placeholder="面積m²" title="床面積[m²]" onchange="pcAnnexSet(${k},'area',this.value,1)"><input type="number" step="0.001" value="${escA(it.p)}" placeholder="p" title="在館者密度p[人/m²]" onchange="pcAnnexSet(${k},'p',this.value,1)"><button type="button" class="small danger" onclick="pcAnnexDel(${k})">×</button></div>`; }).join("");
+  return `<div class="pcIex" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,.8fr) auto"><input value="${escA(it.name)}" placeholder="名称(例: 更衣室)" title="名称(室カードを作らない手入力)" onchange="pcAnnexSet(${k},'name',this.value,0)"><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.01" value="${escA(it.area)}" placeholder="面積m²" title="床面積[m²]" onchange="pcAnnexSet(${k},'area',this.value,1)"><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.001" value="${escA(it.p)}" placeholder="p" title="在館者密度p[人/m²]" onchange="pcAnnexSet(${k},'p',this.value,1)"><button type="button" class="small danger" onclick="pcAnnexDel(${k})">×</button></div>`; }).join("");
  return `<div class="pcIsec">付属する居室 <select style="width:auto;font-size:12px" onchange="pcAnnexHas('${rid}',this.value==='1')"><option value="0" ${a.has?"":"selected"}>無</option><option value="1" ${a.has?"selected":""}>有</option></select></div>
   ${a.has?`${rows||'<div class="small-note">まだありません。「図で選ぶ」で室をクリックしてください。</div>'}
   <div style="margin-top:4px"><button type="button" class="small${picking?" primary":""}" onclick="pcAnnexPick('${rid}')">${picking?"選び終わる":"図で選ぶ"}</button> <button type="button" class="small" onclick="pcAnnexAdd('${rid}')">＋手入力</button></div>
@@ -2554,8 +2586,8 @@ const PC_SMK={none:"なし",natural:"自然排煙",mech:"機械排煙",special:"
 let PC_SMOKE_OPEN=true;
 function pcSmokeHTML(r,i,hc){
  const sm=r.smoke||{type:"none",openings:[]}, rid=r.id, ops=sm.openings||[];
- const inp=(f,l,st,isN,ph)=>`<div><label>${l}</label><input type="number" step="${st}" value="${escA(sm[f]??"")}" ${ph?`placeholder="${ph}"`:""} onchange="pcSmokeSet('${rid}','${f}',this.value,${isN})"></div>`;
- const rows=ops.map((o,oi)=>`<div class="pcIex" style="grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,.9fr) auto">${[["w",0.05,1,"幅"],["hb",0.05,1,"下端"],["ht",0.05,1,"上端"],["cap",1,0,"能力"]].map(([f,st,isN,ph])=>`<input type="number" step="${st}" value="${escA(o[f]??"")}" placeholder="${ph}" title="${ph}" onchange="pcSmokeOp('${rid}',${oi},'${f}',this.value,${isN})">`).join("")}<input value="${escA(o.grp??"")}" placeholder="組" title="同時開放グループ(相互30m以内・空欄=共通)" onchange="pcSmokeOp('${rid}',${oi},'grp',this.value,0)"><button type="button" class="small danger" onclick="pcSmokeOpDel('${rid}',${oi})">×</button></div>`).join("");
+ const inp=(f,l,st,isN,ph)=>`<div><label>${l}</label><input type="text" inputmode="decimal" autocomplete="off" data-num step="${st}" value="${escA(sm[f]??"")}" ${ph?`placeholder="${ph}"`:""} onchange="pcSmokeSet('${rid}','${f}',this.value,${isN})"></div>`;
+ const rows=ops.map((o,oi)=>`<div class="pcIex" style="grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,.9fr) auto">${[["w",0.05,1,"幅"],["hb",0.05,1,"下端"],["ht",0.05,1,"上端"],["cap",1,0,"能力"]].map(([f,st,isN,ph])=>`<input type="text" inputmode="decimal" autocomplete="off" data-num step="${st}" value="${escA(o[f]??"")}" placeholder="${ph}" title="${ph}" onchange="pcSmokeOp('${rid}',${oi},'${f}',this.value,${isN})">`).join("")}<input value="${escA(o.grp??"")}" placeholder="組" title="同時開放グループ(相互30m以内・空欄=共通)" onchange="pcSmokeOp('${rid}',${oi},'grp',this.value,0)"><button type="button" class="small danger" onclick="pcSmokeOpDel('${rid}',${oi})">×</button></div>`).join("");
  return `<details class="pcSmk" ${PC_SMOKE_OPEN?"open":""} ontoggle="PC_SMOKE_OPEN=this.open"><summary class="pcIsec" style="cursor:pointer${hc?`;color:${PC_CHKCOL[hc.lv]}`:""}" ${hc?`title="${escA(hc.msg)}"`:""}>排煙設備: ${PC_SMK[sm.type||"none"]}${sm.type!=="none"?`(排煙口${ops.length})`:""}</summary>
   <div class="pcIg">
    <div class="w2"><label>種別</label><select onchange="pcSmokeSet('${rid}','type',this.value,0,1)">${Object.entries({none:"なし(Ve=0)",natural:"自然排煙(令126条の3)",mech:"機械排煙",special:"特殊な構造(平12建告1437号)"}).map(([k,l])=>`<option value="${k}" ${(sm.type||"none")===k?"selected":""}>${l}</option>`).join("")}</select></div>
@@ -2593,7 +2625,7 @@ function pcInspRender(){
  const el=document.getElementById("pcInsp"); if(!el) return;
  const S=pcSelObj(), opt=(list,cur)=>list.map(([k,l])=>`<option value="${escA(k)}" ${String(cur)===String(k)?"selected":""}>${esc(l)}</option>`).join("");
  const hl=S&&S.t==="room"&&PC_CHK&&PC_CHK.cell[S.i]||{}; // ⑧で指摘のある項目は枠に色
- const fld=(t,id,[f,l,st,isN],o,cls)=>{ const c=t==="room"&&hl[f]; return `<div class="${cls||""}"><label>${esc(l)}</label><input type="number" step="${st}" value="${escA(o[f]??"")}" ${c?`style="border:2px solid ${PC_CHKCOL[c.lv]}" title="${escA(c.msg)}"`:""} onchange="pcSetF('${t}','${id}','${f}',this.value,${isN})"></div>`; };
+ const fld=(t,id,[f,l,st,isN],o,cls)=>{ const c=t==="room"&&hl[f]; return `<div class="${cls||""}"><label>${esc(l)}</label><input type="text" inputmode="decimal" autocomplete="off" data-num step="${st}" value="${escA(o[f]??"")}" ${c?`style="border:2px solid ${PC_CHKCOL[c.lv]}" title="${escA(c.msg)}"`:""} onchange="pcSetF('${t}','${id}','${f}',this.value,${isN})"></div>`; };
  const chkBox=pcInspChkHTML;
  if(!S){ el.innerHTML=`<h4>入力欄</h4><div class="small-note">室・直通階段・建具をクリックすると、その③室の入力・①直通階段・②建具リストの項目をここで入力できます(②③と同じデータです)。<br>2室が接する壁のクリックで建具の追加、室のダブルクリックで名称・図上の面積・回転などのメニューが出ます。</div>`; return; }
  if(S.t==="room"){ const r=S.o, id=r.id;
@@ -2736,7 +2768,7 @@ function pcMenuShow(ev,html){
  m.innerHTML=html+`<button type="button" class="pcX" onclick="pcMenuClose()" title="閉じる">×</button>`; m.style.display="";
  const x=Math.min(ev.clientX-wb.left+8, wb.width-m.offsetWidth-4), y=ev.clientY-wb.top+10;
  m.style.left=Math.max(4,x)+"px"; m.style.top=y+"px";
- const f=m.querySelector("input[type=text],select"); if(f) f.focus();
+ const f=m.querySelector("input[type=text]:not([data-num]),select"); if(f) f.focus();
 }
 function pcMenuClose(){ const m=document.getElementById("pcMenu"); if(m){ m.style.display="none"; m.innerHTML=""; } }
 function pcDoorOpts(sel){
@@ -2837,7 +2869,7 @@ function pcMenuNew(type,ev){
  const f=document.getElementById("pcNm"); if(f) f.select();
 }
 function pcAreaRow(v,enter){ // 図上の面積の入力欄(ポンチ絵の大きさ専用)
- return `<div class="pcMr"><label>図上の面積 <input type="number" id="pcA" min="1" step="any" value="${v}" style="width:6em" onkeydown="if(event.key==='Enter')${enter}"> m²</label><div class="small-note">ポンチ絵の大きさ専用(③の床面積とは連動しません)</div></div>`;
+ return `<div class="pcMr"><label>図上の面積 <input type="text" inputmode="decimal" autocomplete="off" data-num id="pcA" min="1" step="any" value="${v}" style="width:6em" onkeydown="if(event.key==='Enter')${enter}"> m²</label><div class="small-note">ポンチ絵の大きさ専用(③の床面積とは連動しません)</div></div>`;
 }
 function pcAreaIn(){ const v=+document.getElementById("pcA").value; return v>0?Math.max(v,1):null; }
 function pcAddNode(type){
@@ -2878,7 +2910,7 @@ function pcMenuNode(ev,key){
   ${b?`<div class="pcMr"><button type="button" onclick="pcBarMore()">棒を描き足す</button>${sg>=0&&b.segs.length>1?` <button type="button" class="danger" onclick="pcBarDel()">この棒を削除</button>`:""}</div>`
    :r.kind==="corridor"?`<div class="pcMr"><button type="button" onclick="pcBarConvert()">棒の廊下に変換</button></div>`:""}`);
 }
-function pcWidthRow(v,enter){ return `<div class="pcMr"><label>廊下の幅 <input type="number" id="pcW" min="0.3" step="0.1" value="${v}" style="width:5em" onkeydown="if(event.key==='Enter')${enter}"> m</label><div class="small-note">ポンチ絵の表示用(③の入力とは連動しません)</div></div>`; }
+function pcWidthRow(v,enter){ return `<div class="pcMr"><label>廊下の幅 <input type="text" inputmode="decimal" autocomplete="off" data-num id="pcW" min="0.3" step="0.1" value="${v}" style="width:5em" onkeydown="if(event.key==='Enter')${enter}"> m</label><div class="small-note">ポンチ絵の表示用(③の入力とは連動しません)</div></div>`; }
 function pcWidthIn(){ const v=+document.getElementById("pcW").value; return v>0?Math.max(v,0.3):null; }
 /* 棒の廊下の描画モード: PC_BARDRAW={key}(既存の廊下に描き足す) / {pend:{name,w}}(最初の1本を引いた時に室を作る) */
 let PC_BARDRAW=null;
@@ -3047,7 +3079,7 @@ function pcUlTip(){
  if(m.t==="move") return `<div class="pcModeTip">✋ 下敷きを移動中: 図の上をドラッグすると下敷きが動きます(室は動きません)。 <button type="button" class="primary" onclick="pcUlMode('move')">移動を終了</button>(Esc)</div>`;
  if(!m.a) return `<div class="pcModeTip">📏 縮尺合わせ: 下敷きの上で、長さの分かる2点(通り芯の交点など)の<b>1点目</b>をクリックしてください。 <button type="button" onclick="pcUlMode('cal')">やめる</button>(Esc)</div>`;
  if(!m.b) return `<div class="pcModeTip">📏 縮尺合わせ: <b>2点目</b>をクリックしてください(離れた2点ほど正確です)。 <button type="button" onclick="pcUlMode('cal')">やめる</button>(Esc)</div>`;
- return `<div class="pcModeTip">📏 縮尺合わせ: 2点間の実寸 <input type="number" id="pcUlReal" step="0.01" min="0" style="width:90px" onkeydown="if(event.key==='Enter')pcUlApply()"> m <button type="button" class="primary" onclick="pcUlApply()">適用</button> <button type="button" onclick="PC_ULMODE={t:'cal'};ponchiDraw(true)">点を選び直す</button> <button type="button" onclick="pcUlMode('cal')">やめる</button></div>`;
+ return `<div class="pcModeTip">📏 縮尺合わせ: 2点間の実寸 <input type="text" inputmode="decimal" autocomplete="off" data-num id="pcUlReal" step="0.01" min="0" style="width:90px" onkeydown="if(event.key==='Enter')pcUlApply()"> m <button type="button" class="primary" onclick="pcUlApply()">適用</button> <button type="button" onclick="PC_ULMODE={t:'cal'};ponchiDraw(true)">点を選び直す</button> <button type="button" onclick="pcUlMode('cal')">やめる</button></div>`;
 }
 /* ---------- ポンチ絵: 歩行距離の測定 ----------
    始点・終点をクリック → 建具(扉の中心)を経由する最短経路。室の中は直線、入れ子の内側の室・棒の廊下の角は回り込む。
@@ -3103,12 +3135,15 @@ function pcLSmooth(arr,G){ // 格子の階段状の経路を、同じ長さの�
 function pcPtsClean(P){ const o=[]; P.forEach(p=>{ const l=o[o.length-1]; if(l&&Math.hypot(l.x-p.x,l.y-p.y)<1e-6) return; o.push({x:p.x,y:p.y}); });
  for(let i=o.length-2;i>0;i--){ const a=o[i-1],b=o[i],c=o[i+1]; if(Math.abs((b.x-a.x)*(c.y-b.y)-(b.y-a.y)*(c.x-b.x))<1e-9&&((b.x-a.x)*(c.x-b.x)+(b.y-a.y)*(c.y-b.y))>=0) o.splice(i,1); }
  return o; }
+function pcClampReg(p,G){ // 点を室の範囲(いちばん近い矩形)の中へ寄せる(5cm未満のすき間越しの建具用)
+ let b=null,bd=Infinity; G.rects.forEach(R=>{ const q={x:Math.min(Math.max(p.x,R.x),R.x+R.w),y:Math.min(Math.max(p.y,R.y),R.y+R.h)}, d=Math.hypot(q.x-p.x,q.y-p.y); if(d<bd){ bd=d; b=q; } });
+ return b||{x:p.x,y:p.y}; }
 function pcGraph(extra){ // 室・階段をまたぐ経路のグラフ: 建具の両側の点(入力した室→相手、両側入力なら逆も)+室ごとの格子(水平・垂直)/見通し(直線)
  const rect=pcDistRect(), N=[], adj=[], add=(p,reg,tag)=>{ N.push({x:p.x,y:p.y,reg,tag}); adj.push([]); return N.length-1; };
  const byReg={}, put=(reg,i)=>{ (byReg[reg]=byReg[reg]||[]).push(i); };
  if(!rect) Object.entries(PC_RG).forEach(([k,G])=>{ G.wp.forEach(p=>put(k,add(p,k,null))); });
  const dn=PC_DG.map((g,gi)=>{ if(g.apart||g.noEvac) return null;
-  const o={}; if(PC_RG[g.a]){ o.a=add(g,g.a,{door:gi}); put(g.a,o.a); } if(PC_RG[g.b]){ o.b=add(g,g.b,{door:gi}); put(g.b,o.b); }
+  const o={}; if(PC_RG[g.a]){ o.a=add(pcClampReg(g,PC_RG[g.a]),g.a,{door:gi}); put(g.a,o.a); } if(PC_RG[g.b]){ o.b=add(pcClampReg(g,PC_RG[g.b]),g.b,{door:gi}); put(g.b,o.b); }
   if(o.a!=null&&o.b!=null){ adj[o.a].push([o.b,0]); if(g.both) adj[o.b].push([o.a,0]); }
   return o; });
  if(extra) extra(add,put);
@@ -3203,7 +3238,7 @@ function pcRoomDist(k,F){ // 居室内のいちばん遠い点から、最寄り
  const off0=ex.map(gi=>F?F.at(gi,k):0), use=ex.map((gi,j)=>isFinite(off0[j]));
  const EI=ex.filter((g,j)=>use[j]), OFF=off0.filter((v,j)=>use[j]);
  if(!EI.length) return {err:"直通階段・地上への出口まで建具をたどって行けません"};
- const EX=EI.map(i=>({x:PC_DG[i].x,y:PC_DG[i].y})), rect=pcDistRect();
+ const EX=EI.map(i=>pcClampReg(PC_DG[i],G)), rect=pcDistRect();
  // 始点にできる範囲: 各矩形を壁から1m縮め、内側の室(穴)は1m広げてよける
  const IN=G.rects.map(R=>{ const mx=Math.min(PC_WALL,R.w/2), my=Math.min(PC_WALL,R.h/2); return {x:R.x+mx,y:R.y+my,w:R.w-2*mx,h:R.h-2*my}; });
  const HO=G.holes.map(H=>({x:H.x-PC_WALL,y:H.y-PC_WALL,w:H.w+2*PC_WALL,h:H.h+2*PC_WALL}));
@@ -3265,7 +3300,7 @@ function ponchiBind(){
   if(PC_ANNEX&&PONCHI_EDIT){ const g=ev.target.closest("[data-pk]"); PONCHI_DRAG={annexPick:g?g.dataset.pk:""}; return; } // 付属する居室を図で選ぶ
   if(PC_BARDRAW&&PONCHI_EDIT){ // 棒の廊下の描画: 押した点から棒を引く
    const pt=pcPoint(ev); if(!pt) return;
-   const key=PC_BARDRAW.key||null, b=key&&pcBars(key), w=b?b.w:PC_BARDRAW.pend.w, cx=pcBarSnapCtx(key,w), s=PONCHI_VIEW.s, thr=8/s, thrC=Math.max(thr,w*0.6);
+   const key=PC_BARDRAW.key||null, b=key&&pcBars(key), w=b?b.w:PC_BARDRAW.pend.w, cx=pcBarSnapCtx(key,w), s=PONCHI_VIEW.s, thr=Math.max(8/s,PC_SNAP), thrC=Math.max(thr,w*0.6);
    let x0=null,y0=null;
    (b?b.segs:[]).some(g=>{ const R=pcBarRect(g,w); if(pt.x<R.x-thr||pt.x>R.x+R.w+thr||pt.y<R.y-thr||pt.y>R.y+R.h+thr) return false; // 既存の棒の上から引く → 中心線上から(T字・L字)
     if(g.y1===g.y2){ x0=Math.min(Math.max(pcSnapC(pt.x,w,cx.xe,cx.xc,thr,thrC,pcGrid()),Math.min(g.x1,g.x2)),Math.max(g.x1,g.x2)); y0=g.y1; }
@@ -3313,7 +3348,7 @@ function ponchiBind(){
   if(!d.moved&&Math.hypot(ev.clientX-d.sx,ev.clientY-d.sy)<3) return;
   if(!d.moved) pcPush(); // ドラッグ1回=1操作
   d.moved=true;
-  const s=PONCHI_VIEW.s, dx=(ev.clientX-d.sx)/s, dy=(ev.clientY-d.sy)/s, thr=8/s;
+  const s=PONCHI_VIEW.s, dx=(ev.clientX-d.sx)/s, dy=(ev.clientY-d.sy)/s, thr=Math.max(8/s,PC_SNAP);
   const pos=M.ponchi.pos, p=pos[d.key];
   if(d.act==="bE"){ // 棒の端: その棒の向きに沿って伸縮(長さ0の棒はドラッグの向き)
    const o=d.osegs[d.seg], g=pcBars(d.key).segs[d.seg], c=d.cx, e1=d.end===0, ox=e1?o.x1:o.x2, oy=e1?o.y1:o.y2;
@@ -3498,7 +3533,7 @@ function renderCheck(){
  const fa=chkNum(M.chkFloorArea);
  const diff=(fa&&fa>0)?(sumAll-fa)/fa:null;
  document.getElementById("chkHead").innerHTML=`<div class="grid">
-   <div class="f"><label>求積図の階床面積 [m²](照合用・任意)</label><input type="number" step="0.01" value="${M.chkFloorArea??""}" onchange="M.chkFloorArea=this.value;renderCheck()"></div>
+   <div class="f"><label>求積図の階床面積 [m²](照合用・任意)</label><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.01" value="${M.chkFloorArea??""}" onchange="M.chkFloorArea=this.value;renderCheck()"></div>
    <div class="f"><label>室面積の合計(付属居室の手入力分を含む)</label><div style="font-size:15px;font-weight:700;padding:4px 0">${fmt(sumAll)} m²${diff!=null?` <span class="${Math.abs(diff)>0.01?"ng":"ok"}" style="font-size:12.5px">(差 ${fmt(sumAll-fa)}m² / ${(diff*100).toFixed(2)}%)</span>`:""}</div></div>
    <div class="f"><label>在館者数の合計</label><div style="font-size:15px;font-weight:700;padding:4px 0">${fmt(calc.floor?calc.floor.sumPA:0,1)} 人</div></div>
    <div class="f"><label>室 / 建具 / 直通階段</label><div style="font-size:15px;font-weight:700;padding:4px 0">${model.rooms.length} / ${(M.doors||[]).length} / ${(model.stairs||[]).length}</div></div>
@@ -3660,9 +3695,9 @@ function renderProrate(){
   const rows=(mx.rows||[]).map((r,ri)=>{const A=+r.area||0;return `<tr>
    <td><input value="${escA(r.name)}" oninput="PR().mix[${mi}].rows[${ri}].name=this.value"></td>
    <td><select onchange="prMixUse(${mi},${ri},this.value)">${useOpts(r.useKey)}</select></td>
-   <td><input type="number" step="0.01" value="${r.area}" oninput="PR().mix[${mi}].rows[${ri}].area=num(this.value)" onchange="renderProrate()"></td>
-   <td><input type="number" step="0.001" value="${r.p}" placeholder="${USES[r.useKey]?.pNote?"座席数÷面積":""}" oninput="PR().mix[${mi}].rows[${ri}].p=num(this.value)" onchange="renderProrate()"></td>
-   <td><input type="number" step="1" value="${r.ql}" oninput="PR().mix[${mi}].rows[${ri}].ql=num(this.value)" onchange="renderProrate()"></td>
+   <td><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.01" value="${r.area}" oninput="PR().mix[${mi}].rows[${ri}].area=num(this.value)" onchange="renderProrate()"></td>
+   <td><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.001" value="${r.p}" placeholder="${USES[r.useKey]?.pNote?"座席数÷面積":""}" oninput="PR().mix[${mi}].rows[${ri}].p=num(this.value)" onchange="renderProrate()"></td>
+   <td><input type="text" inputmode="decimal" autocomplete="off" data-num step="1" value="${r.ql}" oninput="PR().mix[${mi}].rows[${ri}].ql=num(this.value)" onchange="renderProrate()"></td>
    <td style="text-align:right">${A>0&&r.p!==""?fmt((+r.p)*A,2):"—"}</td>
    <td style="text-align:right">${A>0&&r.ql!==""?fmt((+r.ql)*A,0):"—"}</td>
    <td><button class="small danger" onclick="PR().mix[${mi}].rows.splice(${ri},1);renderProrate()">×</button></td></tr>`;}).join("");
@@ -3697,8 +3732,8 @@ function renderProrate(){
    <td><input value="${escA(s.name)}" oninput="PR().walk[${wi}].rows[${si}].name=this.value"></td>
    <td><select onchange="prSegSet(${wi},${si},'cat',this.value)">${catOpts(s.cat)}</select></td>
    <td style="min-width:130px"><select onchange="prSegSet(${wi},${si},'type',this.value)">${Object.entries(PR_SEG).filter(([k])=>k!=="seat"||WALKCAT[s.cat].seat!=null).map(([k,l])=>`<option value="${k}" ${k===s.type?"selected":""}>${l}</option>`).join("")}</select></td>
-   <td><input type="number" step="0.1" value="${s.l}" oninput="PR().walk[${wi}].rows[${si}].l=num(this.value)" onchange="renderProrate()"></td>
-   <td><input type="number" step="1" value="${s.v}" oninput="PR().walk[${wi}].rows[${si}].v=num(this.value)" onchange="renderProrate()">${std!==""&&+s.v!==+std?`<div class="warn small-note">表の値 ${std}</div>`:""}</td>
+   <td><input type="text" inputmode="decimal" autocomplete="off" data-num step="0.1" value="${s.l}" oninput="PR().walk[${wi}].rows[${si}].l=num(this.value)" onchange="renderProrate()"></td>
+   <td><input type="text" inputmode="decimal" autocomplete="off" data-num step="1" value="${s.v}" oninput="PR().walk[${wi}].rows[${si}].v=num(this.value)" onchange="renderProrate()">${std!==""&&+s.v!==+std?`<div class="warn small-note">表の値 ${std}</div>`:""}</td>
    <td style="text-align:right">${l>0&&v>0?fmt(l/v,3):"—"}</td>
    <td><button class="small danger" onclick="PR().walk[${wi}].rows.splice(${si},1);renderProrate()">×</button></td></tr>`;}).join("");
   const stale=wk.applied&&c.room&&(+c.room[wk.field]!==wk.applied.l||+c.room.walkV!==wk.applied.v);
