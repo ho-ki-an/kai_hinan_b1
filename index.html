@@ -1318,9 +1318,12 @@ function toHalfNum(s){ return String(s).replace(/[０-９．＋，ｅＥ]/g,c=>S
 function numFix(t,fire){ if(!t||!t.matches||!t.matches("input[data-num]")) return; const v=t.value, h=toHalfNum(v); if(h===v) return;
  const c=t.selectionStart; t.value=h; try{ if(c!=null){ const k=Math.max(0,c-(v.length-h.length)); t.setSelectionRange(k,k); } }catch(_){}
  if(fire) t.dispatchEvent(new Event("input",{bubbles:true})); }
-document.addEventListener("input",e=>{ if(!e.isComposing) numFix(e.target,false); },true); // 各欄のoninputより先に直す
-document.addEventListener("compositionend",e=>numFix(e.target,true),true);
+let NUM_COMP=null; // 日本語入力の変換中の欄(確定前に値を書き換えるとIMEと食い違い、確定できなくなるため触らない)
+document.addEventListener("compositionstart",e=>{ NUM_COMP=e.target; },true);
+document.addEventListener("compositionend",e=>{ const t=e.target; NUM_COMP=null; setTimeout(()=>numFix(t,true),0); },true); // 確定し終わってから半角に
+document.addEventListener("input",e=>{ if(e.isComposing||NUM_COMP===e.target) return; numFix(e.target,false); },true); // 各欄のoninputより先に直す
 document.addEventListener("change",e=>numFix(e.target,false),true);
+document.addEventListener("focusout",e=>{ if(NUM_COMP===e.target) NUM_COMP=null; numFix(e.target,true); },true);
 function num(v){ const n=parseFloat(v); return isNaN(n)?"":n; }
 
 function renderStairs(){
