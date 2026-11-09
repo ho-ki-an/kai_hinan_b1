@@ -3158,26 +3158,57 @@ function pcPtsClean(P){ const o=[]; P.forEach(p=>{ const l=o[o.length-1]; if(l&&
 function pcClampReg(p,G){ // 点を室の範囲(いちばん近い矩形)の中へ寄せる(5cm未満のすき間越しの建具用)
  let b=null,bd=Infinity; G.rects.forEach(R=>{ const q={x:Math.min(Math.max(p.x,R.x),R.x+R.w),y:Math.min(Math.max(p.y,R.y),R.y+R.h)}, d=Math.hypot(q.x-p.x,q.y-p.y); if(d<bd){ bd=d; b=q; } });
  return b||{x:p.x,y:p.y}; }
+function pcInner(G){ // 経路を通す範囲: 壁から1m内側(狭い向きは中央)、内側の室(穴)は1m広げてよける
+ if(G._in) return G._in; // 外形全体(L字の廊下など矩形の組み合わせも)から壁の近くを除く: 外接矩形を縮め、外側の部分を広げて穴にする
+ let mx=PC_WALL, my=PC_WALL; G.rects.forEach(R=>{ mx=Math.min(mx,R.w/2); my=Math.min(my,R.h/2); });
+ const x1=Math.min(...G.rects.map(R=>R.x)), y1=Math.min(...G.rects.map(R=>R.y)), x2=Math.max(...G.rects.map(R=>R.x+R.w)), y2=Math.max(...G.rects.map(R=>R.y+R.h));
+ const rects=[{x:x1+mx,y:y1+my,w:x2-x1-2*mx,h:y2-y1-2*my}], holes=[];
+ if(G.rects.length>1){ const r=v=>Math.round(v*1e6)/1e6, U={rects:G.rects,holes:[]};
+  const xs=[...new Set(G.rects.flatMap(R=>[r(R.x),r(R.x+R.w)]))].sort((a,b)=>a-b), ys=[...new Set(G.rects.flatMap(R=>[r(R.y),r(R.y+R.h)]))].sort((a,b)=>a-b);
+  for(let i=0;i+1<xs.length;i++) for(let j=0;j+1<ys.length;j++) if(!pcInReg({x:(xs[i]+xs[i+1])/2,y:(ys[j]+ys[j+1])/2},U)) holes.push({x:xs[i]-mx,y:ys[j]-my,w:xs[i+1]-xs[i]+2*mx,h:ys[j+1]-ys[j]+2*my}); }
+ G.holes.forEach(H=>holes.push({x:H.x-PC_WALL,y:H.y-PC_WALL,w:H.w+2*PC_WALL,h:H.h+2*PC_WALL}));
+ const I={rects,holes,mx,my};
+ const cor=R=>[{x:R.x,y:R.y},{x:R.x+R.w,y:R.y},{x:R.x,y:R.y+R.h},{x:R.x+R.w,y:R.y+R.h}], wp=[];
+ holes.forEach(H=>wp.push(...cor(H)));
+ I.wp=wp.filter(q=>pcInReg(q,I)); return G._in=I;
+}
+function pcClampIn(p,I){ // 点を経路の範囲へ寄せる(穴に入ったら近い辺へ押し出す)
+ let q=pcClampReg(p,I); const H=I.holes.find(H=>q.x>H.x&&q.x<H.x+H.w&&q.y>H.y&&q.y<H.y+H.h);
+ if(H){ const c=[{x:H.x,y:q.y},{x:H.x+H.w,y:q.y},{x:q.x,y:H.y},{x:q.x,y:H.y+H.h}].filter(c=>pcInReg(c,I)).sort((a,b)=>Math.hypot(a.x-q.x,a.y-q.y)-Math.hypot(b.x-q.x,b.y-q.y)); if(c.length) q=c[0]; }
+ return q; }
+function pcApproach(p,G,I,door){ // 経路が室に入る点: 建具は壁から垂直に1m(狭い向きは中央)入った点、それ以外は経路の範囲へ寄せた点
+ let q=null;
+ if(door){ let bd=0.06; const tryE=(d,n,m)=>{ if(d>=bd) return; const c={x:p.x+n[0]*m,y:p.y+n[1]*m}; if(pcInReg(c,I)){ bd=d; q=c; } };
+  G.rects.forEach(R=>{ const inY=p.y>=R.y-0.05&&p.y<=R.y+R.h+0.05, inX=p.x>=R.x-0.05&&p.x<=R.x+R.w+0.05, mx=I.mx, my=I.my;
+   if(inY){ tryE(Math.abs(p.x-R.x),[1,0],mx); tryE(Math.abs(p.x-R.x-R.w),[-1,0],mx); }
+   if(inX){ tryE(Math.abs(p.y-R.y),[0,1],my); tryE(Math.abs(p.y-R.y-R.h),[0,-1],my); } });
+  G.holes.forEach(H=>{ const inY=p.y>=H.y-0.05&&p.y<=H.y+H.h+0.05, inX=p.x>=H.x-0.05&&p.x<=H.x+H.w+0.05;
+   if(inY){ tryE(Math.abs(p.x-H.x),[-1,0],PC_WALL); tryE(Math.abs(p.x-H.x-H.w),[1,0],PC_WALL); }
+   if(inX){ tryE(Math.abs(p.y-H.y),[0,-1],PC_WALL); tryE(Math.abs(p.y-H.y-H.h),[0,1],PC_WALL); } }); }
+ return q||(pcInReg(p,I)?{x:p.x,y:p.y}:pcClampIn(p,I));
+}
 function pcGraph(extra){ // 室・階段をまたぐ経路のグラフ: 建具の両側の点(入力した室→相手、両側入力なら逆も)+室ごとの格子(水平・垂直)/見通し(直線)
  const rect=pcDistRect(), N=[], adj=[], add=(p,reg,tag)=>{ N.push({x:p.x,y:p.y,reg,tag}); adj.push([]); return N.length-1; };
  const byReg={}, put=(reg,i)=>{ (byReg[reg]=byReg[reg]||[]).push(i); };
- if(!rect) Object.entries(PC_RG).forEach(([k,G])=>{ G.wp.forEach(p=>put(k,add(p,k,null))); });
+ if(!rect) Object.entries(PC_RG).forEach(([k,G])=>{ pcInner(G).wp.forEach(p=>put(k,add(p,k,null))); });
  const dn=PC_DG.map((g,gi)=>{ if(g.apart||g.noEvac) return null;
   const o={}; if(PC_RG[g.a]){ o.a=add(pcClampReg(g,PC_RG[g.a]),g.a,{door:gi}); put(g.a,o.a); } if(PC_RG[g.b]){ o.b=add(pcClampReg(g,PC_RG[g.b]),g.b,{door:gi}); put(g.b,o.b); }
   if(o.a!=null&&o.b!=null){ adj[o.a].push([o.b,0]); if(g.both) adj[o.b].push([o.a,0]); }
   return o; });
  if(extra) extra(add,put);
- Object.entries(byReg).forEach(([k,ids])=>{ const G=PC_RG[k];
-  if(rect){ const H=pcHanan(G,ids.map(i=>N[i])), base=N.length; // 格子の点を足して、指定点(建具・始点・終点)を同じ位置の格子点とつなぐ
+ Object.entries(byReg).forEach(([k,ids0])=>{ const G=PC_RG[k], I=pcInner(G), dd=(p,q)=>rect?Math.abs(p.x-q.x)+Math.abs(p.y-q.y):Math.hypot(p.x-q.x,p.y-q.y);
+  const ids=ids0.map(i=>{ const p=N[i], q=pcApproach(p,G,I,!!(p.tag&&p.tag.door!=null)); if(Math.hypot(q.x-p.x,q.y-p.y)<1e-6) return i; // 建具は壁から1m入った点を経由
+   const j=add(q,k,null), w=dd(p,q); adj[i].push([j,w]); adj[j].push([i,w]); return j; });
+  if(rect){ const H=pcHanan(I,ids.map(i=>N[i])), base=N.length; // 格子の点を足して、指定点(建具・始点・終点)を同じ位置の格子点とつなぐ
    H.P.forEach(p=>add(p,k,null)); H.adj.forEach((l,i)=>l.forEach(([j,w])=>adj[base+i].push([base+j,w])));
    ids.forEach(i=>{ const j=H.at(N[i]); if(j<0) return; adj[i].push([base+j,0]); adj[base+j].push([i,0]); }); return; }
   for(let i=0;i<ids.length;i++) for(let j=i+1;j<ids.length;j++){ const p=N[ids[i]], q=N[ids[j]];
-   if(pcSegOK(p,q,G)){ const d=Math.hypot(q.x-p.x,q.y-p.y); adj[ids[i]].push([ids[j],d]); adj[ids[j]].push([ids[i],d]); } } });
+   if(pcSegOK(p,q,I)){ const d=Math.hypot(q.x-p.x,q.y-p.y); adj[ids[i]].push([ids[j],d]); adj[ids[j]].push([ids[i],d]); } } });
  return {rect,N,adj,dn};
 }
 function pcPathPts(N,path,rect){ let pts=[]; // 室ごとの区間に分けて(水平・垂直ならL字にまとめて)つなぐ
  for(let a=0;a<path.length;){ let b=a; while(b+1<path.length&&N[path[b+1]].reg===N[path[a]].reg) b++;
-  const run=path.slice(a,b+1).map(i=>N[i]); pts=pts.concat(rect?pcLSmooth(run,PC_RG[N[path[a]].reg]):run); a=b+1; }
+  const run=path.slice(a,b+1).map(i=>N[i]); pts=pts.concat(rect?pcLSmooth(run,pcInner(PC_RG[N[path[a]].reg])):run); a=b+1; }
  return pts; }
 function pcRoute(A,B){ // A={x,y,reg} B={x,y,reg}|{door:i}|{stair:key} → {len,pts,seq}|{err}
  let s=-1, e=-1; const Gr=pcGraph((add,put)=>{ s=add(A,A.reg,{start:1}); put(A.reg,s); if(B.door==null&&!B.stair){ e=add(B,B.reg,{end:1}); put(B.reg,e); } });
@@ -3230,7 +3261,7 @@ function pcMeasSVG(X,Y){
  const m=PC_MEAS; if(!m) return "";
  let h=""; const col="#e8590c";
  if(m.res&&m.res.pts){ const P=m.res.pts, d=P.map((p,i)=>(i?"L":"M")+X(p.x).toFixed(1)+","+Y(p.y).toFixed(1)).join(" ");
-  h+=`<path d="${d}" fill="none" stroke="#fff" stroke-width="6" stroke-linejoin="round" pointer-events="none"/><path d="${d}" fill="none" stroke="${col}" stroke-width="3" stroke-linejoin="round" pointer-events="none"/>`;
+  h+=`<path d="${d}" fill="none" stroke="#fff" stroke-width="6" stroke-linejoin="round" pointer-events="none"/><path d="${d}" fill="none" stroke="${col}" stroke-width="3" stroke-linejoin="round" pointer-events="none"/>`+(m.b&&(m.b.key||m.b.stair)?`<g pointer-events="none">${pcArrowEnd(P,X,Y,col)}</g>`:"");
   const L=P[P.length-1]; h+=`<text x="${X(L.x)+10}" y="${Y(L.y)-10}" font-size="13" font-weight="700" fill="${col}" paint-order="stroke" stroke="#fff" stroke-width="4" pointer-events="none">${fmt(m.res.len,2)} m</text>`; }
  if(m.a) h+=`<circle cx="${X(m.a.x)}" cy="${Y(m.a.y)}" r="6" fill="${col}" stroke="#fff" stroke-width="2" pointer-events="none"/>`;
  if(m.b) h+=`<circle cx="${X(m.b.x)}" cy="${Y(m.b.y)}" r="7" fill="#fff" stroke="${col}" stroke-width="3" pointer-events="none"/>`;
@@ -3259,24 +3290,23 @@ function pcRoomDist(k,F){ // 居室内のいちばん遠い点から、最寄り
  const EI=ex.filter((g,j)=>use[j]), OFF=off0.filter((v,j)=>use[j]);
  if(!EI.length) return {err:"直通階段・地上への出口まで建具をたどって行けません"};
  const EX=EI.map(i=>pcClampReg(PC_DG[i],G)), rect=pcDistRect();
- // 始点にできる範囲: 各矩形を壁から1m縮め、内側の室(穴)は1m広げてよける
- const IN=G.rects.map(R=>{ const mx=Math.min(PC_WALL,R.w/2), my=Math.min(PC_WALL,R.h/2); return {x:R.x+mx,y:R.y+my,w:R.w-2*mx,h:R.h-2*my}; });
- const HO=G.holes.map(H=>({x:H.x-PC_WALL,y:H.y-PC_WALL,w:H.w+2*PC_WALL,h:H.h+2*PC_WALL}));
- const okP=p=>pcInReg(p,G)&&IN.some(R=>p.x>=R.x-1e-6&&p.x<=R.x+R.w+1e-6&&p.y>=R.y-1e-6&&p.y<=R.y+R.h+1e-6)&&!HO.some(H=>p.x>H.x+1e-6&&p.x<H.x+H.w-1e-6&&p.y>H.y+1e-6&&p.y<H.y+H.h-1e-6);
+ // 始点・経路の範囲: 各矩形を壁から1m縮め、内側の室(穴)は1m広げてよける。出口へは壁から1m入った点(DP)から垂直に向かう
+ const I=pcInner(G), IN=I.rects, HO=I.holes, DP=EX.map(p=>pcApproach(p,G,I,true)), INI=OFF.map((v,j)=>v+(rect?Math.abs(EX[j].x-DP[j].x)+Math.abs(EX[j].y-DP[j].y):Math.hypot(EX[j].x-DP[j].x,EX[j].y-DP[j].y)));
+ const okP=p=>pcInReg(p,G)&&pcInReg(p,I);
  let solve; // 点の並び → {v:各点の距離(-1=行けない), path(j):その点から出口までの経路, ex(j):使った出口}
- if(rect) solve=S=>{ const H=pcHanan(G,EX.concat(S)), src=[], ini=[], who={};
-  EX.forEach((p,j)=>{ const i=H.at(p); if(i<0) return; src.push(i); ini.push(OFF[j]); if(who[i]==null||OFF[j]<OFF[who[i]]) who[i]=j; });
+ if(rect) solve=S=>{ const H=pcHanan(I,DP.concat(S)), src=[], ini=[], who={};
+  DP.forEach((p,j)=>{ const i=H.at(p); if(i<0) return; src.push(i); ini.push(INI[j]); if(who[i]==null||INI[j]<INI[who[i]]) who[i]=j; });
   const {dist,prev}=pcDijk(H.P.length,H.adj,src,null,ini);
   const end=j=>{ let i=H.at(S[j]); while(prev[i]>=0) i=prev[i]; return i; };
   return {v:S.map(p=>{ const i=H.at(p); return i>=0&&isFinite(dist[i])?dist[i]:-1; }), ex:j=>who[end(j)],
-   path:j=>{ const run=[]; for(let i=H.at(S[j]);i>=0;i=prev[i]) run.push(H.P[i]); return pcPtsClean(pcLSmooth(run,G)); }}; };
- else { const N=EX.map((p,j)=>({x:p.x,y:p.y,door:j+1})).concat(G.wp.map(p=>({x:p.x,y:p.y}))), n=N.length; // 直線: 出口と回り込みの点の間の見通しで距離を広げておく
-  const dist=N.map((p,i)=>i<EX.length?OFF[i]:Infinity), nxt=N.map(()=>-1), done=N.map(()=>false);
+   path:j=>{ const run=[]; for(let i=H.at(S[j]);i>=0;i=prev[i]) run.push(H.P[i]); return pcPtsClean(pcLSmooth(run,I).concat([EX[who[end(j)]]])); }}; };
+ else { const N=DP.map((p,j)=>({x:p.x,y:p.y,door:j+1})).concat(I.wp.map(p=>({x:p.x,y:p.y}))), n=N.length; // 直線: 出口と回り込みの点の間の見通しで距離を広げておく
+  const dist=N.map((p,i)=>i<DP.length?INI[i]:Infinity), nxt=N.map(()=>-1), done=N.map(()=>false);
   for(;;){ let u=-1; for(let i=0;i<n;i++) if(!done[i]&&dist[i]<Infinity&&(u<0||dist[i]<dist[u])) u=i; if(u<0) break; done[u]=true;
-   for(let v=0;v<n;v++) if(!done[v]){ const d=dist[u]+Math.hypot(N[u].x-N[v].x,N[u].y-N[v].y); if(d<dist[v]-1e-9&&pcSegOK(N[u],N[v],G)){ dist[v]=d; nxt[v]=u; } } }
+   for(let v=0;v<n;v++) if(!done[v]){ const d=dist[u]+Math.hypot(N[u].x-N[v].x,N[u].y-N[v].y); if(d<dist[v]-1e-9&&pcSegOK(N[u],N[v],I)){ dist[v]=d; nxt[v]=u; } } }
   const end=i=>{ while(nxt[i]>=0&&!N[i].door) i=nxt[i]; return i; };
-  solve=S=>{ const bv=[]; const v=S.map(p=>{ let bd=-1,b=-1; for(let i=0;i<n;i++){ if(!isFinite(dist[i])) continue; const d=dist[i]+Math.hypot(p.x-N[i].x,p.y-N[i].y); if((bd<0||d<bd-1e-9)&&pcSegOK(p,N[i],G)){ bd=d; b=i; } } bv.push(b); return bd; });
-   return {v,ex:j=>N[end(bv[j])].door-1,path:j=>{ const pts=[S[j]]; for(let i=bv[j];i>=0;i=nxt[i]){ pts.push({x:N[i].x,y:N[i].y}); if(N[i].door) break; } return pts; }}; }; }
+  solve=S=>{ const bv=[]; const v=S.map(p=>{ let bd=-1,b=-1; for(let i=0;i<n;i++){ if(!isFinite(dist[i])) continue; const d=dist[i]+Math.hypot(p.x-N[i].x,p.y-N[i].y); if((bd<0||d<bd-1e-9)&&pcSegOK(p,N[i],I)){ bd=d; b=i; } } bv.push(b); return bd; });
+   return {v,ex:j=>N[end(bv[j])].door-1,path:j=>{ const pts=[S[j]]; for(let i=bv[j];i>=0;i=nxt[i]){ pts.push({x:N[i].x,y:N[i].y}); if(N[i].door){ pts.push(EX[N[i].door-1]); break; } } return pcPtsClean(pts); }}; }; }
  // 粗い点(角・16分割)で探し、いちばん遠い付近を6回細かくして1mm程度まで詰める
  let S=[]; const cor=(R,st)=>[[R.x,R.y],[R.x+R.w,R.y],[R.x,R.y+R.h],[R.x+R.w,R.y+R.h]].forEach(([x,y])=>S.push({x,y,st}));
  IN.forEach(R=>{ const st=Math.max(R.w,R.h,0.1)/16, nx=Math.max(1,Math.ceil(R.w/st)), ny=Math.max(1,Math.ceil(R.h/st)); cor(R,st);
@@ -3294,6 +3324,11 @@ function pcRoomDist(k,F){ // 居室内のいちばん遠い点から、最寄り
  let pts=r.path(bi); if(F){ const j=r.ex(bi); if(j!=null&&j>=0) pts=pcPtsClean(pts.concat(F.path(EI[j],k))); }
  return {len:r.v[bi],pts};
 }
+function pcArrowEnd(P,X,Y,col){ // 経路の終点(建具)に矢印
+ if(!P||P.length<2) return ""; const b=P[P.length-1]; let a=null; for(let i=P.length-2;i>=0;i--) if(Math.hypot(P[i].x-b.x,P[i].y-b.y)>1e-6){ a=P[i]; break; } if(!a) return "";
+ const bx=X(b.x), by=Y(b.y), L=Math.hypot(bx-X(a.x),by-Y(a.y))||1, ux=(bx-X(a.x))/L, uy=(by-Y(a.y))/L, k=9, w=4.5, f=v=>v.toFixed(1);
+ return `<path d="M${f(bx-ux*k+uy*w)},${f(by-uy*k-ux*w)} L${f(bx)},${f(by)} L${f(bx-ux*k-uy*w)},${f(by-uy*k+ux*w)} Z" fill="${col}" stroke="#fff" stroke-width="1" stroke-linejoin="round"/>`;
+}
 function pcDistOn(){ return !!(M.ponchi&&(M.ponchi.showDist||M.ponchi.showDistS)); }
 function pcDistSVG(X,Y){ // 歩行距離の表示: 居室ごとに、いちばん遠い点(壁から1m)から居室出口/直通階段・地上の出口までの経路と距離
  if(!pcDistOn()) return "";
@@ -3306,7 +3341,7 @@ function pcDistSVG(X,Y){ // 歩行距離の表示: 居室ごとに、いちば�
    const inp=r[K.f]!==""&&r[K.f]!=null&&isFinite(+r[K.f])? +r[K.f] : null, short=inp!=null&&inp+1e-9<v;
    const A=P[0], right=A.x>R0.x+R0.w/2, low=A.y>R0.y+R0.h/2, tx=X(A.x)+(right?-6:6), anc=right?"end":"start", ty=Y(A.y)+(low?-8-K.row*14:16+K.row*14);
    const tip=`${r.name||"(無名)"}: 室内でいちばん遠い点(壁から1m)から${K.nm}まで ${fmt(v,2)}m(${mode})`+(inp!=null?` / ③の入力 ${fmt(inp,2)}m`+(short?"(入力値が短い)":""):" / ③は未入力");
-   h+=`<g pointer-events="none"><title>${esc(tip)}</title><path d="${d}" fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${K.col}" stroke-width="2" stroke-dasharray="${K.dash}" stroke-linejoin="round"/>`
+   h+=`<g pointer-events="none"><title>${esc(tip)}</title><path d="${d}" fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${K.col}" stroke-width="2" stroke-dasharray="${K.dash}" stroke-linejoin="round"/>${pcArrowEnd(P,X,Y,K.col)}`
     +`<circle cx="${X(A.x)}" cy="${Y(A.y)}" r="4" fill="${K.col}" stroke="#fff" stroke-width="1.5"/>`
     +`<text x="${tx}" y="${ty}" text-anchor="${anc}" font-size="12" font-weight="700" fill="${K.col}" paint-order="stroke" stroke="#fff" stroke-width="4">${K.row?"階":"室"} ${fmt(v,2)}m${inp!=null?`<tspan font-weight="400" fill="${short?"#c92a2a":"#56636f"}"> (③${fmt(inp,2)}${short?" ⚠":""})</tspan>`:""}</text></g>`; }); });
  return h;
